@@ -41,9 +41,65 @@ int main( int argc, char* args[] )
             int oldx = 0;
             int oldy = 0;
 
+            int centrex= SCREEN_WIDTH/2;
+            int centrey = SCREEN_HEIGHT/2;
+
             Shape* studShape = new Shape(); // Due to some complications, I had to put an empty shape as the 0th element of the linked list
             Shape* shape = NULL; // declaration of the shape pointer containing the rectangle, line or point information
+
+            //----------------------------------------------------------
+            int colors[3] = {0,0,0};
             ShapeList->append(studShape); // append the empty shape into the list
+            SDL_Rect liner = {centrex-100,centrey-100 ,centrex,centrey-100};
+            shape = new Line(&liner,colors,ID);
+            ShapeList->append(shape);
+
+
+            colors[1] = 255;
+            liner = {centrex-100,centrey ,centrex,centrey};
+            shape = new Line(&liner,colors,ID);
+            ShapeList->append(shape);
+
+            colors[1] = 120;
+            colors[2] = 255;
+            liner = {centrex,centrey-100 ,centrex,centrey};
+            shape = new Line(&liner,colors,ID);
+            ShapeList->append(shape);
+
+            colors[0] = 250;
+
+            liner = {centrex-100,centrey-100 ,centrex-100,centrey};
+            shape = new Line(&liner,colors,ID);
+            ShapeList->append(shape);
+
+            //------------------------------------------------------
+
+
+            colors[0] = 0; colors[1] = 0;
+            ShapeList->append(studShape); // append the empty shape into the list
+            liner = {centrex-50,centrey-50 ,centrex-50,centrey-50};
+            shape = new Line(&liner,colors,ID);
+            ShapeList->append(shape);
+
+
+            colors[1] = 255;
+            liner = {centrex-50,centrey ,centrex-50,centrey-50};
+            shape = new Line(&liner,colors,ID);
+            ShapeList->append(shape);
+
+            colors[1] = 120;
+            colors[2] = 255;
+            liner = {centrex,centrey-50 ,centrex-50,centrey-50};
+            shape = new Line(&liner,colors,ID);
+            ShapeList->append(shape);
+
+            colors[0] = 250;
+
+            liner = {centrex-50,centrey-50 ,centrex-50,centrey=50};
+            shape = new Line(&liner,colors,ID);
+            ShapeList->append(shape);
+            //---------------------------------------------------
+
 
             SDL_RenderClear( gRenderer ); //Clear window when the program starts.
 
@@ -178,17 +234,9 @@ int main( int argc, char* args[] )
 
                                 delete poppedshapes;
                                 poppedshapes = new shapelist;
-
-                                switch(mode)
-                                {
-                                case (LINE):
-                                {
-                                    SDL_Rect liner = {oldx,oldy,x,y};
-                                    shape = new Line(&liner,colors,ID);
-                                    ShapeList->append(shape);
-                                    break;
-                                }
-                                }
+                                SDL_Rect liner = {oldx,oldy,x,y};
+                                shape = new Line(&liner,colors,ID);
+                                ShapeList->append(shape);
                                 ID++; //ID uniquely identifies a shape according to a 'serial' number
                             }
 
