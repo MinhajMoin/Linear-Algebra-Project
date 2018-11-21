@@ -15,179 +15,118 @@ int main( int argc, char* args[] )
 {
     srand(time(NULL)); // for generating random numbers with rand()
 
-    Uint8 r,g,b; // for the colors of the shapes
-    shapelist* poppedshapes = new shapelist; // the list storing popped shapes when the undo button is pressed
+//    Uint8 r,g,b; // for the colors of the shapes
+//    shapelist* poppedshapes = new shapelist; // the list storing popped shapes when the undo button is pressed
 
     //Start up SDL and create window
-    if(!init())
+    init();
+
+    bool quit = false;  //Main loop controller
+
+    SDL_Event e;        //Event handler that takes care of all events
+
+    int centrex= SCREEN_WIDTH/2;
+    int centrey = SCREEN_HEIGHT/2;
+
+    Shape* studShape = new Shape(); // Due to some complications, I had to put an empty shape as the 0th element of the linked list
+    Shape* shape = NULL; // declaration of the shape pointer containing the rectangle, line or point information
+    ShapeList->append(studShape); // append the empty shape into the list
+    //----------------------------------------------------------
+
+    int xout[2] = {centrex+200, (centrex-200)};
+    int yout[2] = {centrey+200, (centrey-200)};
+    int xin[2] = {centrex+140, (centrex-140)};
+    int yin[2] = {centrey+140, (centrey-140)};
+
+    int colors[3] = {250,250,250};
+    SDL_Rect liner = {xout[1],yout[1],xout[0],yout[1]};
+    shape = new Line(&liner,colors,ID);
+    ShapeList->append(shape);
+
+    liner = {xout[1],yout[0],xout[0],yout[0]};
+    shape = new Line(&liner,colors,ID);
+    ShapeList->append(shape);
+
+    liner = {xout[0],yout[1],xout[0],yout[0]};
+    shape = new Line(&liner,colors,ID);
+    ShapeList->append(shape);
+
+
+    liner = {xout[1],yout[1],xout[1],yout[0]};
+    shape = new Line(&liner,colors,ID);
+    ShapeList->append(shape);
+
+    //------------------------------------------------------
+
+    ShapeList->append(studShape); // append the empty shape into the list
+    liner = {xin[0],yin[0] ,xin[1],yin[0]};
+    shape = new Line(&liner,colors,ID);
+    ShapeList->append(shape);
+
+    liner = {xin[0],yin[0] ,xin[0],yin[1]};
+    shape = new Line(&liner,colors,ID);
+    ShapeList->append(shape);
+
+    liner = {xin[1],yin[0] ,xin[1],yin[1]};
+    shape = new Line(&liner,colors,ID);
+    ShapeList->append(shape);
+
+    liner = {xin[1],yin[1] ,xin[0],yin[1]};
+    shape = new Line(&liner,colors,ID);
+    ShapeList->append(shape);
+    //---------------------------------------------------
+
+    ShapeList->append(studShape); // append the empty shape into the list
+    liner = {xin[0],yin[0] ,xout[0],yout[0]};
+    shape = new Line(&liner,colors,ID);
+    ShapeList->append(shape);
+
+    liner = {xin[1],yin[0] ,xout[1],yout[0]};
+    shape = new Line(&liner,colors,ID);
+    ShapeList->append(shape);
+
+    liner = {xin[0],yin[1] ,xout[0],yout[1]};
+    shape = new Line(&liner,colors,ID);
+    ShapeList->append(shape);
+
+    liner = {xin[1],yin[1] ,xout[1],yout[1]};
+    shape = new Line(&liner,colors,ID);
+    ShapeList->append(shape);
+    //-----------------------------------------------
+
+    SDL_RenderClear( gRenderer ); //Clear window when the program starts.
+
+    //While application is running
+    while( !quit )
     {
-        printf( "Failed to initialize!\n" );
-    }
-    else
-    {
-
-        if( !loadMedia() )  //Load media
+        //Handle events on queue
+        while( SDL_PollEvent( &e ) != 0 )
         {
-            printf( "Failed to load media!\n" );
-        }
-        else
-        {
-            bool quit = false;  //Main loop controller
-
-            SDL_Event e;        //Event handler that takes care of all events
-
-            bool mouseClicked = false;
-            SDL_Rect fillRect; //Object containing the co ordinates of the shapes
-            int oldx = 0;
-            int oldy = 0;
-
-            int centrex= SCREEN_WIDTH/2;
-            int centrey = SCREEN_HEIGHT/2;
-
-            Shape* studShape = new Shape(); // Due to some complications, I had to put an empty shape as the 0th element of the linked list
-            Shape* shape = NULL; // declaration of the shape pointer containing the rectangle, line or point information
-
-            //----------------------------------------------------------
-
-            int xout[2] = {centrex, (centrex-200)};
-            int yout[2] = {centrey, (centrey-200)};
-            int xin[2] = {centrex-20, (centrex-180)};
-            int yin[2] = {centrey-20, (centrey-180)};
-
-            int colors[3] = {0,0,0};
-            ShapeList->append(studShape); // append the empty shape into the list
-            SDL_Rect liner = {xout[1],yout[1],xout[0],yout[1]};
-            shape = new Line(&liner,colors,ID);
-            ShapeList->append(shape);
-
-
-            colors[1] = 255;
-            liner = {xout[1],yout[0],xout[0],yout[0]};
-            shape = new Line(&liner,colors,ID);
-            ShapeList->append(shape);
-
-            colors[1] = 120;
-            colors[2] = 255;
-            liner = {xout[0],yout[1],xout[0],yout[0]};
-            shape = new Line(&liner,colors,ID);
-            ShapeList->append(shape);
-
-            colors[0] = 250;
-
-            liner = {xout[1],yout[1],xout[1],yout[0]};
-            shape = new Line(&liner,colors,ID);
-            ShapeList->append(shape);
-
-            //------------------------------------------------------
-
-
-            colors[0] = 0; colors[1] = 230; colors[2] - 255;
-            ShapeList->append(studShape); // append the empty shape into the list
-            liner = {xin[0],yin[0] ,xin[1],yin[0]};
-            shape = new Line(&liner,colors,ID);
-            ShapeList->append(shape);
-
-
-            colors[1] = 255;
-            liner = {xin[0],yin[0] ,xin[0],yin[1]};
-            shape = new Line(&liner,colors,ID);
-            ShapeList->append(shape);
-
-            colors[1] = 120;
-            colors[2] = 255;
-            liner = {xin[1],yin[0] ,xin[1],yin[1]};
-            shape = new Line(&liner,colors,ID);
-            ShapeList->append(shape);
-
-            colors[0] = 250;
-
-            liner = {xin[1],yin[1] ,xin[0],yin[1]};
-            shape = new Line(&liner,colors,ID);
-            ShapeList->append(shape);
-            //---------------------------------------------------
-
-            ShapeList->append(studShape); // append the empty shape into the list
-            liner = {xin[0],yin[0] ,xout[0],yout[0]};
-            shape = new Line(&liner,colors,ID);
-            ShapeList->append(shape);
-
-            liner = {xin[1],yin[0] ,xout[1],yout[0]};
-            shape = new Line(&liner,colors,ID);
-            ShapeList->append(shape);
-
-            liner = {xin[0],yin[1] ,xout[0],yout[1]};
-            shape = new Line(&liner,colors,ID);
-            ShapeList->append(shape);
-
-            liner = {xin[1],yin[1] ,xout[1],yout[1]};
-            shape = new Line(&liner,colors,ID);
-            ShapeList->append(shape);
-            //-----------------------------------------------
-
-            SDL_RenderClear( gRenderer ); //Clear window when the program starts.
-
-            //While application is running
-            while( !quit )
+            //User requests quit
+            if( e.type == SDL_QUIT )
             {
-                //Handle events on queue
-                while( SDL_PollEvent( &e ) != 0 )
-                {
-                    //User requests quit
-                    if( e.type == SDL_QUIT )
-                    {
-                        delete shape; // Delete the dynamically allocated memory when quitting. the deallocation has to be done here because the pointer goes out of scope outside the loop
-                        quit = true;
-                    }
+                delete shape; // Delete the dynamically allocated memory when quitting. the deallocation has to be done here because the pointer goes out of scope outside the loop
+                quit = true;
+            }
 
-                    if( e.type == SDL_MOUSEMOTION || e.type == SDL_MOUSEBUTTONDOWN || e.type == SDL_MOUSEBUTTONUP )
-                    {
-                        //Get mouse position
-                        int x, y;
-                        SDL_GetMouseState( &x, &y );
+        }
+        //Clear screen
 
-                        if(e.type ==  SDL_MOUSEMOTION)
-                        {
-                            if(mouseClicked == true) //change the fillRect when click-dragging the mouse
-                            {
-                                fillRect = { oldx, oldy, x - oldx, y - oldy };
-                            }
-                        }
+        SDL_SetRenderDrawColor( gRenderer, 0, 0, 0, 255 );
+        SDL_RenderClear( gRenderer );
 
-                        if(e.type == SDL_MOUSEBUTTONDOWN) // change the click position of the mouse
-                        {
-                            if (e.button.button == SDL_BUTTON_LEFT)
-                            {
-                                if(mouseClicked == false)
-                                {
-                                    mouseClicked = true;
-                                    oldx = x;
-                                    oldy = y;
-                                }
-                            }
-                        }
-
-                    }
-                }
-                //Clear screen
-
-                SDL_SetRenderDrawColor( gRenderer, 0xFF, 0xFF, 0x0FF, 255 );
-                SDL_RenderClear( gRenderer );
-
-                if (shape != NULL) // Iterate thru the list and draw all objects in the list
-                {
-                    for (int i=1; i<ShapeList->length(); i++)
-                    {
-                        SDL_SetRenderDrawColor( gRenderer, ShapeList->getShapeAt(i)->colors[0],
-                                                ShapeList->getShapeAt(i)->colors[1],ShapeList->getShapeAt(i)->colors[2], 0x00 );
-                        ShapeList->getShapeAt(i)->Draw(gRenderer);
-                    }
-                }
-                SDL_RenderPresent(gRenderer);
+        if (shape != NULL) // Iterate thru the list and draw all objects in the list
+        {
+            for (int i=1; i<ShapeList->length(); i++)
+            {
+                SDL_SetRenderDrawColor( gRenderer, ShapeList->getShapeAt(i)->colors[0],
+                                        ShapeList->getShapeAt(i)->colors[1],ShapeList->getShapeAt(i)->colors[2], 0x00 );
+                ShapeList->getShapeAt(i)->Draw(gRenderer);
             }
         }
+        SDL_RenderPresent(gRenderer);
     }
     close(); // DeAllocation of dynamic arrays and objects and destruction of SDL window
     delete ShapeList;
-    delete poppedshapes;
     return 0;
 }
