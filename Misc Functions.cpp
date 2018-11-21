@@ -34,7 +34,7 @@ bool init()
 			printf( "Warning: Linear texture filtering not enabled!" );
 		}
 		//Create window
-		gWindow = SDL_CreateWindow( "OOP Assignment 3", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_SHOWN );
+		gWindow = SDL_CreateWindow( "Perspective Projections", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_SHOWN );
 		if( gWindow == NULL )
 		{
 			printf( "Window could not be created! SDL Error: %s\n", SDL_GetError() );
@@ -59,7 +59,6 @@ bool init()
 
 	return success;
 }
-
 
 void close()
 {
