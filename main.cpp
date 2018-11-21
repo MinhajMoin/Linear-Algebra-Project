@@ -48,58 +48,81 @@ int main( int argc, char* args[] )
             Shape* shape = NULL; // declaration of the shape pointer containing the rectangle, line or point information
 
             //----------------------------------------------------------
+
+            int xout[2] = {centrex, (centrex-200)};
+            int yout[2] = {centrey, (centrey-200)};
+            int xin[2] = {centrex-20, (centrex-180)};
+            int yin[2] = {centrey-20, (centrey-180)};
+
             int colors[3] = {0,0,0};
             ShapeList->append(studShape); // append the empty shape into the list
-            SDL_Rect liner = {centrex-100,centrey-100 ,centrex,centrey-100};
+            SDL_Rect liner = {xout[1],yout[1],xout[0],yout[1]};
             shape = new Line(&liner,colors,ID);
             ShapeList->append(shape);
 
 
             colors[1] = 255;
-            liner = {centrex-100,centrey ,centrex,centrey};
+            liner = {xout[1],yout[0],xout[0],yout[0]};
             shape = new Line(&liner,colors,ID);
             ShapeList->append(shape);
 
             colors[1] = 120;
             colors[2] = 255;
-            liner = {centrex,centrey-100 ,centrex,centrey};
+            liner = {xout[0],yout[1],xout[0],yout[0]};
             shape = new Line(&liner,colors,ID);
             ShapeList->append(shape);
 
             colors[0] = 250;
 
-            liner = {centrex-100,centrey-100 ,centrex-100,centrey};
+            liner = {xout[1],yout[1],xout[1],yout[0]};
             shape = new Line(&liner,colors,ID);
             ShapeList->append(shape);
 
             //------------------------------------------------------
 
 
-            colors[0] = 0; colors[1] = 0;
+            colors[0] = 0; colors[1] = 230; colors[2] - 255;
             ShapeList->append(studShape); // append the empty shape into the list
-            liner = {centrex-50,centrey-50 ,centrex-50,centrey-50};
+            liner = {xin[0],yin[0] ,xin[1],yin[0]};
             shape = new Line(&liner,colors,ID);
             ShapeList->append(shape);
 
 
             colors[1] = 255;
-            liner = {centrex-50,centrey ,centrex-50,centrey-50};
+            liner = {xin[0],yin[0] ,xin[0],yin[1]};
             shape = new Line(&liner,colors,ID);
             ShapeList->append(shape);
 
             colors[1] = 120;
             colors[2] = 255;
-            liner = {centrex,centrey-50 ,centrex-50,centrey-50};
+            liner = {xin[1],yin[0] ,xin[1],yin[1]};
             shape = new Line(&liner,colors,ID);
             ShapeList->append(shape);
 
             colors[0] = 250;
 
-            liner = {centrex-50,centrey-50 ,centrex-50,centrey=50};
+            liner = {xin[1],yin[1] ,xin[0],yin[1]};
             shape = new Line(&liner,colors,ID);
             ShapeList->append(shape);
             //---------------------------------------------------
 
+            ShapeList->append(studShape); // append the empty shape into the list
+            liner = {xin[0],yin[0] ,xout[0],yout[0]};
+            shape = new Line(&liner,colors,ID);
+            ShapeList->append(shape);
+
+            liner = {xin[1],yin[0] ,xout[1],yout[0]};
+            shape = new Line(&liner,colors,ID);
+            ShapeList->append(shape);
+
+            liner = {xin[0],yin[1] ,xout[0],yout[1]};
+            shape = new Line(&liner,colors,ID);
+            ShapeList->append(shape);
+
+            liner = {xin[1],yin[1] ,xout[1],yout[1]};
+            shape = new Line(&liner,colors,ID);
+            ShapeList->append(shape);
+            //-----------------------------------------------
 
             SDL_RenderClear( gRenderer ); //Clear window when the program starts.
 
@@ -114,61 +137,6 @@ int main( int argc, char* args[] )
                     {
                         delete shape; // Delete the dynamically allocated memory when quitting. the deallocation has to be done here because the pointer goes out of scope outside the loop
                         quit = true;
-                    }
-                    //User Inputs from the KeyBoard
-                    if (e.type == SDL_KEYDOWN)
-                    {
-                        switch( e.key.keysym.sym )
-                        {
-                        case (SDLK_u): //Clear Screen when user presses U. all lists will be emptied. extra functionality
-                            delete ShapeList;
-                            ShapeList = new shapelist;
-                            ShapeList->append(new Shape());
-                            delete poppedshapes;
-                            delete shape;
-                            poppedshapes = new shapelist;
-                            shape = NULL;
-                            cout << "SCREEN CLEARED" << endl;
-                            break;
-                        case (SDLK_DOWN): //User wants to move the latest shape down
-                            cout << "DOWN BUTTON" << endl;
-                            if (shape!=NULL && ShapeList->length()>2)
-                            {
-                                ShapeList->push_to_back(shape);
-                            }
-                            break;
-                        case (SDLK_UP): //User wants to move the latest shape up
-                            cout << "UP BUTTON" << endl;
-                            if(shape!=NULL && ShapeList->getIndex(shape)<ShapeList->length()-1 && ShapeList->getIndex(shape)>0)
-                            {
-                                ShapeList->push_to_front(shape);
-                            }
-                            break;
-
-                        case (SDLK_q)://User wants to undo something. Assigned to Q as an extra functionality
-                            cout << "UNDO BUTTON PRESSED" << endl;
-                            if (ShapeList->length()-1>0)
-                            {
-                                Shape* pop = ShapeList->pop();
-                                poppedshapes->append(pop);
-
-                            }
-                            break;
-
-                        case (SDLK_e): //User wants to redo something he did in the past.Assigned to E as an extra functionality
-                            cout << "REDO BUTTON PRESSED" << endl;
-                            if (poppedshapes->length()>0)
-                            {
-                                Shape* pop = poppedshapes->pop();
-                                Shape* redoshape = NULL;
-                                if (pop->type == LINE)
-                                {
-                                    redoshape = new Line(&pop->fillRect,pop->colors,pop->ID);
-                                }
-                                ShapeList->append(redoshape);
-                            }
-                            break;
-                        }
                     }
 
                     if( e.type == SDL_MOUSEMOTION || e.type == SDL_MOUSEBUTTONDOWN || e.type == SDL_MOUSEBUTTONUP )
@@ -196,50 +164,6 @@ int main( int argc, char* args[] )
                                     oldy = y;
                                 }
                             }
-                            if (e.button.button == SDL_BUTTON_RIGHT) // Undo Button
-                            {
-                                cout << "UNDO BUTTON PRESSED" << endl;
-                                if (ShapeList->length()-1>0)
-                                {
-                                    Shape* pop = ShapeList->pop();
-                                    poppedshapes->append(pop);
-                                }
-                            }
-                            if (e.button.button == SDL_BUTTON_MIDDLE) // Redo Button. rebuild the shapes from the poppedshapes list
-                            {
-                                cout << "REDO BUTTON PRESSED" << endl;
-                                if (poppedshapes->length()>0)
-                                {
-                                    Shape* pop = poppedshapes->pop();
-                                    Shape* redoshape = NULL;
-                                    if (pop->type == LINE)
-                                    {
-                                        redoshape = new Line(&pop->fillRect,pop->colors,pop->ID);
-                                    }
-                                    ShapeList->append(redoshape);
-                                }
-                            }
-                        }
-
-                        if(e.type == SDL_MOUSEBUTTONUP) //When user finishes clicking the mouse button
-                        {
-                            mouseClicked = false;
-                            if (e.button.button == SDL_BUTTON_LEFT)
-                            {
-                                //Make a new shape according to the set mode and append into the list
-                                r = rand()%256;
-                                g = rand()%256;
-                                b = rand()%256;
-                                int colors[3] = {r,g,b};
-
-                                delete poppedshapes;
-                                poppedshapes = new shapelist;
-                                SDL_Rect liner = {oldx,oldy,x,y};
-                                shape = new Line(&liner,colors,ID);
-                                ShapeList->append(shape);
-                                ID++; //ID uniquely identifies a shape according to a 'serial' number
-                            }
-
                         }
 
                     }
