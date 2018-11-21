@@ -148,18 +148,16 @@
 	"Shape.h"
 	<iostream>
 
-1542788194 source:c:\users\minhaj ahmed moin\documents\github\linear-algebra-project\main.cpp
+1542835567 source:c:\users\minhaj ahmed moin\documents\github\linear-algebra-project\main.cpp
 	"Misc Functions.cpp"
 	<time.h>
 	<random>
 	<cstdlib>
-	"Line.h"
 
-1542748554 c:\users\minhaj ahmed moin\documents\github\linear-algebra-project\misc functions.cpp
+1542835664 c:\users\minhaj ahmed moin\documents\github\linear-algebra-project\misc functions.cpp
 	<SDL.h>
 	<stdio.h>
 	<string>
 	<cmath>
 	<iostream>
-	"list.h"
 

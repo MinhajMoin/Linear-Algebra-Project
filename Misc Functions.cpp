@@ -3,7 +3,6 @@
 #include <string>
 #include <cmath>
 #include <iostream>
-#include "list.h"
 
 using namespace std;
 
@@ -14,9 +13,6 @@ const int SCREEN_HEIGHT = 480;
 bool init();
 bool loadMedia();
 void close();
-
-
-shapelist* ShapeList = new shapelist; // declaration of the main list containing rhe shapes
 
 SDL_Window* gWindow = NULL;
 SDL_Renderer* gRenderer = NULL;
@@ -64,11 +60,6 @@ bool init()
 	return success;
 }
 
-bool loadMedia()
-{
-	bool success = true;
-	return success;
-}
 
 void close()
 {
