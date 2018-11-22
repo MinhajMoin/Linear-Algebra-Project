@@ -38,20 +38,10 @@
 			<Add directory="D:/SDL2_image-2.0.1/i686-w64-mingw32/lib" />
 			<Add directory="D:/SDL2-2.0.4/i686-w64-mingw32/lib" />
 		</Linker>
-		<Unit filename="Line.cpp" />
-		<Unit filename="Line.h" />
 		<Unit filename="Misc Functions.cpp">
 			<Option target="&lt;{~None~}&gt;" />
 		</Unit>
-		<Unit filename="Point.h" />
-		<Unit filename="Shape.cpp" />
-		<Unit filename="Shape.h" />
-		<Unit filename="list.cpp" />
-		<Unit filename="list.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
 		<Unit filename="main.cpp" />
-		<Unit filename="node.h" />
 		<Extensions>
 			<code_completion />
 			<envvars />

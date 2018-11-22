@@ -35,6 +35,7 @@ int main( int argc, char* args[] )
     float rotatedCoords [8][3];
     int ind = 0;
     int dist = -3;
+    cout << "Original Coordinates" << endl;
     for (int i = -1; i < 2; i+=2)
     {
         for (int j = 4; j<7; j+=2)
@@ -50,23 +51,31 @@ int main( int argc, char* args[] )
         }
     }
 
-
+    //==================================================================
+    // SACRED CODE AHEAD. DONT TOUCH IT WITHOUT BEGGING FOR FORGIVENESS
+    // OF YOUR SINS. PERFORM ABLUTION BEFORE CHANGING ANYTHING.
+    //==================================================================
     // rotated coordinates after applying rotation matrix on the y-axis
     // x = x*cos(1) + z*sin(1);
     // y = y;
     // z = -x*sin(1) + z*cos(1);
+    //----------------------------------------------------------------------//
+    //                          Rotated Coordinates                         //
+    //----------------------------------------------------------------------//
+    cout << "Rotated Coordinates " << endl;
     for (int i = 0; i < 8 ; i++)
     {
         rotatedCoords[i][0] = coords[i][0]*cos(1) + coords[i][2]*sin(1);
         rotatedCoords[i][1] = coords[i][1];
         rotatedCoords[i][2] = -coords[i][0]*sin(1) + coords[i][2]*cos(1);
-        cout << "Rotated " << i << ' ' <<  rotatedCoords[i][0] << ' ' << rotatedCoords[i][1] << ' ' << rotatedCoords[i][2] << endl;
+        cout << rotatedCoords[i][0] << ' ' << rotatedCoords[i][1] << ' ' << rotatedCoords[i][2] << endl;
     }
 
 
     //----------------------------------------------------------------------//
     //                  Perspective Projection Coordinates                  //
     //----------------------------------------------------------------------//
+    cout << "Perspective Projection Coordinates " << endl;
     for (int i = 0; i < 8 ; i++)
     {
         perspCoords[i][0] = dist * rotatedCoords[i][0] / rotatedCoords[i][2]; // x' = dx/z
@@ -74,12 +83,18 @@ int main( int argc, char* args[] )
         cout << perspCoords[i][0] << ' ' << perspCoords[i][1] << endl;
     }
     //----------------------------------------------------------------------
-
+    // Now to convert the projected coordinates to something the SDL Window
+    // Can Show.
 
     int xout[2] = {centrex+200, (centrex-200)};
     int yout[2] = {centrey+200, (centrey-200)};
     int xin[2] = {centrex+140, (centrex-140)};
     int yin[2] = {centrey+140, (centrey-140)};
+
+//    int xout[2] = {centrex+50*perspCoords[0][0], (centrex+50*perspCoords[1][0])};
+//    int yout[2] = {centrey+50*perspCoords[0][1], (centrey+50*perspCoords[1][1])};
+//    int xin[2] = {centrex+50*perspCoords[2][0], (centrex+50*perspCoords[3][0])};
+//    int yin[2] = {centrey+50*perspCoords[3][1], (centrey+50*perspCoords[3][1])};
 
     SDL_RenderClear( gRenderer ); //Clear window when the program starts.
 
@@ -101,10 +116,7 @@ int main( int argc, char* args[] )
         SDL_RenderClear( gRenderer );
         // Set the color for drawing the lines. White on Black Background
         SDL_SetRenderDrawColor( gRenderer, 255, 255, 255, 255 );
-        //=============================================================
-        // SACRED CODE. DON'T TOUCH IT WITHOUT BEGGING FOR FORGIVENESS
-        // OF YOUR SINS. PERFORM ABLUTION BEFORE CHANGING ANYTHING.
-        //=============================================================
+
         SDL_RenderDrawLine(gRenderer, xout[1],yout[1],xout[0],yout[1]);
         SDL_RenderDrawLine(gRenderer, xout[1],yout[0],xout[0],yout[0]);
         SDL_RenderDrawLine(gRenderer, xout[0],yout[1],xout[0],yout[0]);
