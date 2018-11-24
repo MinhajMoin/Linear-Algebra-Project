@@ -34,7 +34,7 @@ int main( int argc, char* args[] )
     float perspCoords [8][2];
     float rotatedCoords [8][3];
     int ind = 0;
-    int dist = -3;
+    int dist = -1;
     cout << "Original Coordinates" << endl;
     for (int i = -1; i < 2; i+=2)
     {
@@ -65,9 +65,9 @@ int main( int argc, char* args[] )
     cout << "Rotated Coordinates " << endl;
     for (int i = 0; i < 8 ; i++)
     {
-        rotatedCoords[i][0] = coords[i][0]*cos(1) + coords[i][2]*sin(1);
+        rotatedCoords[i][0] = coords[i][0]*cos(0) + coords[i][2]*sin(0);
         rotatedCoords[i][1] = coords[i][1];
-        rotatedCoords[i][2] = -coords[i][0]*sin(1) + coords[i][2]*cos(1);
+        rotatedCoords[i][2] = -coords[i][0]*sin(0) + coords[i][2]*cos(0);
         cout << rotatedCoords[i][0] << ' ' << rotatedCoords[i][1] << ' ' << rotatedCoords[i][2] << endl;
     }
 
@@ -78,18 +78,16 @@ int main( int argc, char* args[] )
     cout << "Perspective Projection Coordinates " << endl;
     for (int i = 0; i < 8 ; i++)
     {
-        perspCoords[i][0] = dist * rotatedCoords[i][0] / rotatedCoords[i][2]; // x' = dx/z
-        perspCoords[i][1] = dist * rotatedCoords[i][1] / rotatedCoords[i][2]; // y' = dy/z
-        cout << perspCoords[i][0] << ' ' << perspCoords[i][1] << endl;
+        perspCoords[i][0] = centrex + 200* dist * rotatedCoords[i][0] / rotatedCoords[i][2]; // x' = dx/z
+        perspCoords[i][1] = centrey/2 + 200*dist * rotatedCoords[i][1] / rotatedCoords[i][2]; // y' = dy/z
+        cout << '(' << perspCoords[i][0] << ',' << perspCoords[i][1] << ')'<< endl;
     }
     //----------------------------------------------------------------------
     // Now to convert the projected coordinates to something the SDL Window
     // Can Show.
 
-    int xout[2] = {centrex+200, (centrex-200)};
-    int yout[2] = {centrey+200, (centrey-200)};
-    int xin[2] = {centrex+140, (centrex-140)};
-    int yin[2] = {centrey+140, (centrey-140)};
+    int xout[4] = {centrex+200, (centrex-200),(centrex+140), (centrex-140)};
+    int yout[4] = {centrey+200, (centrey-200),(centrey+140), (centrey-140)};
 
 //    int xout[2] = {centrex+50*perspCoords[0][0], (centrex+50*perspCoords[1][0])};
 //    int yout[2] = {centrey+50*perspCoords[0][1], (centrey+50*perspCoords[1][1])};
@@ -97,7 +95,8 @@ int main( int argc, char* args[] )
 //    int yin[2] = {centrey+50*perspCoords[3][1], (centrey+50*perspCoords[3][1])};
 
     SDL_RenderClear( gRenderer ); //Clear window when the program starts.
-
+    double k = 0;
+    long int frame = 0;
     //While application is running
     while( !quit )
     {
@@ -111,26 +110,62 @@ int main( int argc, char* args[] )
             }
         }
         //Clear screen
+            for (int i = 0; i < 8 ; i++)
+    {
+        rotatedCoords[i][0] = coords[i][0]*cos(k) + coords[i][2]*sin(k);
+        rotatedCoords[i][1] = coords[i][1];
+        rotatedCoords[i][2] = -coords[i][0]*sin(k) + coords[i][2]*cos(k);
+//        cout << rotatedCoords[i][0] << ' ' << rotatedCoords[i][1] << ' ' << rotatedCoords[i][2] << endl;
+    }
 
+
+    //----------------------------------------------------------------------//
+    //                  Perspective Projection Coordinates                  //
+    //----------------------------------------------------------------------//
+//    cout << "Perspective Projection Coordinates " << endl;
+    for (int i = 0; i < 8 ; i++)
+    {
+        perspCoords[i][0] = centrex + 200* dist * rotatedCoords[i][0] / rotatedCoords[i][2]; // x' = dx/z
+        perspCoords[i][1] = centrey/2 + 200*dist * rotatedCoords[i][1] / rotatedCoords[i][2]; // y' = dy/z
+//        cout << '(' << perspCoords[i][0] << ',' << perspCoords[i][1] << ')'<< endl;
+    }
         SDL_SetRenderDrawColor( gRenderer, 0, 0, 0, 255 );
         SDL_RenderClear( gRenderer );
         // Set the color for drawing the lines. White on Black Background
         SDL_SetRenderDrawColor( gRenderer, 255, 255, 255, 255 );
 
-        SDL_RenderDrawLine(gRenderer, xout[1],yout[1],xout[0],yout[1]);
-        SDL_RenderDrawLine(gRenderer, xout[1],yout[0],xout[0],yout[0]);
-        SDL_RenderDrawLine(gRenderer, xout[0],yout[1],xout[0],yout[0]);
-        SDL_RenderDrawLine(gRenderer, xout[1],yout[1],xout[1],yout[0]);
-        SDL_RenderDrawLine(gRenderer, xin[0],   yin[0] ,xin[1],yin[0]);
-        SDL_RenderDrawLine(gRenderer, xin[0],   yin[0] ,xin[0],yin[1]);
-        SDL_RenderDrawLine(gRenderer, xin[1],   yin[0] ,xin[1],yin[1]);
-        SDL_RenderDrawLine(gRenderer, xin[1],   yin[1] ,xin[0],yin[1]);
-        SDL_RenderDrawLine(gRenderer, xin[0], yin[0] ,xout[0],yout[0]);
-        SDL_RenderDrawLine(gRenderer, xin[1], yin[0] ,xout[1],yout[0]);
-        SDL_RenderDrawLine(gRenderer, xin[0], yin[1] ,xout[0],yout[1]);
-        SDL_RenderDrawLine(gRenderer, xin[1], yin[1] ,xout[1],yout[1]);
+//        SDL_RenderDrawLine(gRenderer, xout[1],yout[1],xout[0],yout[1]);
+//        SDL_RenderDrawLine(gRenderer, xout[1],yout[0],xout[0],yout[0]);
+//        SDL_RenderDrawLine(gRenderer, xout[0],yout[1],xout[0],yout[0]);
+//        SDL_RenderDrawLine(gRenderer, xout[1],yout[1],xout[1],yout[0]);
+//        SDL_RenderDrawLine(gRenderer, xout[2],   yout[2] ,xout[3],yout[2]);
+//        SDL_RenderDrawLine(gRenderer, xout[2],   yout[2] ,xout[2],yout[3]);
+//        SDL_RenderDrawLine(gRenderer, xout[3],   yout[2] ,xout[3],yout[3]);
+//        SDL_RenderDrawLine(gRenderer, xout[3],   yout[3] ,xout[2],yout[3]);
+//        SDL_RenderDrawLine(gRenderer, xout[2], yout[2] ,xout[0],yout[0]);
+//        SDL_RenderDrawLine(gRenderer, xout[3], yout[2] ,xout[1],yout[0]);
+//        SDL_RenderDrawLine(gRenderer, xout[2], yout[3] ,xout[0],yout[1]);
+//        SDL_RenderDrawLine(gRenderer, xout[3], yout[3] ,xout[1],yout[1]);
+
+        frame++;
+        SDL_RenderDrawLine(gRenderer, perspCoords[0][0],perspCoords[0][1],perspCoords[1][0],perspCoords[1][1]);
+        SDL_RenderDrawLine(gRenderer, perspCoords[0][0],perspCoords[0][1],perspCoords[2][0],perspCoords[2][1]);
+        SDL_RenderDrawLine(gRenderer, perspCoords[0][0],perspCoords[0][1],perspCoords[4][0],perspCoords[4][1]);
+
+        SDL_RenderDrawLine(gRenderer, perspCoords[5][0],perspCoords[5][1],perspCoords[4][0],perspCoords[4][1]);
+        SDL_RenderDrawLine(gRenderer, perspCoords[5][0],perspCoords[5][1],perspCoords[1][0],perspCoords[1][1]);
+        SDL_RenderDrawLine(gRenderer, perspCoords[5][0],perspCoords[5][1],perspCoords[7][0],perspCoords[7][1]);
+
+        SDL_RenderDrawLine(gRenderer, perspCoords[6][0],perspCoords[6][1],perspCoords[2][0],perspCoords[2][1]);
+        SDL_RenderDrawLine(gRenderer, perspCoords[6][0],perspCoords[6][1],perspCoords[4][0],perspCoords[4][1]);
+        SDL_RenderDrawLine(gRenderer, perspCoords[6][0],perspCoords[6][1],perspCoords[7][0],perspCoords[7][1]);
+
+        SDL_RenderDrawLine(gRenderer, perspCoords[3][0],perspCoords[3][1],perspCoords[7][0],perspCoords[7][1]);
+        SDL_RenderDrawLine(gRenderer, perspCoords[3][0],perspCoords[3][1],perspCoords[2][0],perspCoords[2][1]);
+        SDL_RenderDrawLine(gRenderer, perspCoords[3][0],perspCoords[3][1],perspCoords[1][0],perspCoords[1][1]);
         //=============================================================
         SDL_RenderPresent(gRenderer);
+        if (frame % 60 == 0) k+= 180*7/22;
     }
     close(); // DeAllocation of dynamic arrays and objects and destruction of SDL window
     return 0;
