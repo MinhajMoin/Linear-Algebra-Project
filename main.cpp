@@ -95,7 +95,7 @@ int main( int argc, char* args[] )
 //    int yin[2] = {centrey+50*perspCoords[3][1], (centrey+50*perspCoords[3][1])};
 
     SDL_RenderClear( gRenderer ); //Clear window when the program starts.
-    double k = 0;
+    double k = 0.0;
     long int frame = 0;
     //While application is running
     while( !quit )
@@ -165,7 +165,7 @@ int main( int argc, char* args[] )
         SDL_RenderDrawLine(gRenderer, perspCoords[3][0],perspCoords[3][1],perspCoords[1][0],perspCoords[1][1]);
         //=============================================================
         SDL_RenderPresent(gRenderer);
-        if (frame % 60 == 0) k+= 180*7/22;
+        if (frame % 600 == 0) k+= (1/3.142);
     }
     close(); // DeAllocation of dynamic arrays and objects and destruction of SDL window
     return 0;
