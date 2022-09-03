@@ -5,10 +5,10 @@ OBJS = main.cpp
 CC = g++
 
 #INCLUDE_PATHS specifies the additional include paths we'll need
-INCLUDE_PATHS = "-IC:\Program Files (x86)\CodeBlocks\MinGW\Libraries\SDL2-2.0.10\i686-w64-mingw32\include\SDL2"
+INCLUDE_PATHS = "-IC:\msys64\mingw64\sdl2\include\SDL2"
 
 #LIBRARY_PATHS specifies the additional library paths we'll need
-LIBRARY_PATHS = "-LC:\Program Files (x86)\CodeBlocks\MinGW\Libraries\SDL2-2.0.10\i686-w64-mingw32\lib"
+LIBRARY_PATHS = "-LC:\msys64\mingw64\sdl2\lib"
 
 #COMPILER_FLAGS specifies the additional compilation options we're using
 # -w suppresses all warnings
@@ -20,7 +20,7 @@ COMPILER_FLAGS =
 LINKER_FLAGS = -lmingw32 -lSDL2main -lSDL2
 
 #VER specifies the compiler standard
-VER = c++11
+VER = c++20
 
 #OBJ_NAME specifies the name of our exectuable
 OBJ_NAME = LinearAlgebra.exe
