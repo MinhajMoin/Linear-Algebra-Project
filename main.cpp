@@ -68,37 +68,42 @@ public:
         // persp_a = vec2(SCREEN_WIDTH*1.0/2 +0  + ((round(a.z) == 0) ? 0 : (scale * a.x/a.z)), SCREEN_HEIGHT/2 +0+ ((a.z == 0) ? 0 : (scale * a.y/a.z)));
         // persp_b = vec2(SCREEN_WIDTH*1.0/2 +0  + ((round(b.z) == 0) ? 0 : (scale * b.x/b.z)), SCREEN_HEIGHT/2 +0+ ((b.z == 0) ? 0 : (scale * b.y/b.z)));
         // persp_c = vec2(SCREEN_WIDTH*1.0/2 +0  + ((round(c.z) == 0) ? 0 : (scale * c.x/c.z)), SCREEN_HEIGHT/2 +0+ ((c.z == 0) ? 0 : (scale * c.y/c.z)));
-        persp_a = vec2(SCREEN_WIDTH*1.0/2 + scale*a.x,SCREEN_HEIGHT/2+scale*a.y);
-        persp_b = vec2(SCREEN_WIDTH*1.0/2 + scale*b.x,SCREEN_HEIGHT/2+scale*b.y);
-        persp_c = vec2(SCREEN_WIDTH*1.0/2 + scale*c.x,SCREEN_HEIGHT/2+scale*c.y);
+        persp_a = vec2(SCREEN_WIDTH*1.0/2 + scale*a.x+offset_x,SCREEN_HEIGHT/2+scale*a.y+offset_y);
+        persp_b = vec2(SCREEN_WIDTH*1.0/2 + scale*b.x+offset_x,SCREEN_HEIGHT/2+scale*b.y+offset_y);
+        persp_c = vec2(SCREEN_WIDTH*1.0/2 + scale*c.x+offset_x,SCREEN_HEIGHT/2+scale*c.y+offset_y);
 
-        rotp_x = vec2(SCREEN_WIDTH*1.0/2 + scale*rot_x.x,SCREEN_HEIGHT/2+scale*rot_x.y);
-        rotp_y = vec2(SCREEN_WIDTH*1.0/2 + scale*rot_y.x,SCREEN_HEIGHT/2+scale*rot_y.y);
-        rotp_z = vec2(SCREEN_WIDTH*1.0/2 + scale*rot_z.x,SCREEN_HEIGHT/2+scale*rot_z.y);
+        rotp_x = vec2(SCREEN_WIDTH*1.0/2 + scale*rot_x.x+offset_x,SCREEN_HEIGHT/2+scale*rot_x.y+offset_y);
+        rotp_y = vec2(SCREEN_WIDTH*1.0/2 + scale*rot_y.x+offset_x,SCREEN_HEIGHT/2+scale*rot_y.y+offset_y);
+        rotp_z = vec2(SCREEN_WIDTH*1.0/2 + scale*rot_z.x+offset_x,SCREEN_HEIGHT/2+scale*rot_z.y+offset_y);
         verts =
         {
-            { SDL_FPoint{ persp_a.x, persp_a.y }, SDL_Color{ 255, 0, 0, 255 }, SDL_FPoint{ 0 }, },
-            { SDL_FPoint{ persp_b.x, persp_b.y }, SDL_Color{ 0, 0, 255, 255 }, SDL_FPoint{ 0 }, },
-            { SDL_FPoint{ persp_c.x, persp_c.y }, SDL_Color{ 0, 255, 0, 255 }, SDL_FPoint{ 0 }, },
+            { SDL_FPoint{ persp_a.x, persp_a.y }, SDL_Color{ 255, 255, 255, 255 }, SDL_FPoint{ 0 }, },
+            { SDL_FPoint{ persp_b.x, persp_b.y }, SDL_Color{ 255, 255, 255, 255 }, SDL_FPoint{ 0 }, },
+            { SDL_FPoint{ persp_c.x, persp_c.y }, SDL_Color{ 255, 255, 255, 255 }, SDL_FPoint{ 0 }, }//,
+            // { SDL_FPoint{ persp_a.x, persp_a.y }, SDL_Color{ 0, 255, 0, 255 }, SDL_FPoint{ 0 }, }
         };
     }
     
+    void set_offset(int x, int y){
+        offset_x = x;
+        offset_y = y;
+    }
     void draw(){
-        // SDL_RenderGeometry( gRenderer, nullptr, verts.data(), verts.size(), nullptr, 0 );
-        // SDL_SetRenderDrawColor(gRenderer, 255, 0,0,255);
-        SDL_SetRenderDrawColor(gRenderer, 255, 255,255,255);
+        SDL_RenderGeometry( gRenderer, nullptr, verts.data(), verts.size(), nullptr, 0 );
+        SDL_SetRenderDrawColor(gRenderer, 255, 0,0,255);
+        // SDL_SetRenderDrawColor(gRenderer, 255, 255,255,255);
         // SDL_RenderDrawPoint(gRenderer, persp_a.x, persp_a.y);
         // SDL_RenderDrawPoint(gRenderer, persp_a.x, persp_a.y+1);
         // SDL_RenderDrawPoint(gRenderer, persp_a.x+1, persp_a.y);
         // SDL_RenderDrawPoint(gRenderer, persp_a.x+1, persp_a.y+1);
         SDL_RenderDrawLine(gRenderer, min(persp_a.x, SCREEN_WIDTH),min(persp_a.y, SCREEN_HEIGHT),min(persp_b.x, SCREEN_WIDTH),min(persp_b.y, SCREEN_HEIGHT));
-        // SDL_SetRenderDrawColor(gRenderer, 0, 255,0,255);
+        SDL_SetRenderDrawColor(gRenderer, 0, 255,0,255);
         // SDL_RenderDrawPoint(gRenderer, persp_b.x, persp_b.y);
         // SDL_RenderDrawPoint(gRenderer, persp_b.x, persp_b.y+1);
         // SDL_RenderDrawPoint(gRenderer, persp_b.x+1, persp_b.y);
         // SDL_RenderDrawPoint(gRenderer, persp_b.x+1, persp_b.y+1);
         SDL_RenderDrawLine(gRenderer, min(persp_b.x, SCREEN_WIDTH),min(persp_b.y, SCREEN_HEIGHT),min(persp_c.x, SCREEN_WIDTH),min(persp_c.y, SCREEN_HEIGHT));
-        // SDL_SetRenderDrawColor(gRenderer, 0, 0,255,255);
+        SDL_SetRenderDrawColor(gRenderer, 0, 0,255,255);
         // SDL_RenderDrawPoint(gRenderer, persp_c.x, persp_c.y);
         // SDL_RenderDrawPoint(gRenderer, persp_c.x, persp_c.y+1);
         // SDL_RenderDrawPoint(gRenderer, persp_c.x+1, persp_c.y);
@@ -106,11 +111,11 @@ public:
         SDL_RenderDrawLine(gRenderer, min(persp_c.x, SCREEN_WIDTH),min(persp_c.y, SCREEN_HEIGHT),min(persp_a.x, SCREEN_WIDTH),min(persp_a.y, SCREEN_HEIGHT));
 
         SDL_SetRenderDrawColor(gRenderer, 255, 0,0,255);
-        SDL_RenderDrawLine(gRenderer, rotp_x.x % SCREEN_WIDTH,rotp_x.y % SCREEN_HEIGHT,SCREEN_WIDTH/2,SCREEN_HEIGHT/2);
+        SDL_RenderDrawLine(gRenderer, min(rotp_x.x, SCREEN_WIDTH),min(rotp_x.y, SCREEN_HEIGHT),offset_x+SCREEN_WIDTH/2,offset_y+SCREEN_HEIGHT/2);
         SDL_SetRenderDrawColor(gRenderer, 0, 255,0,255);
-        SDL_RenderDrawLine(gRenderer, rotp_y.x % SCREEN_WIDTH,rotp_y.y % SCREEN_HEIGHT,SCREEN_WIDTH/2,SCREEN_HEIGHT/2);
+        SDL_RenderDrawLine(gRenderer, min(rotp_y.x, SCREEN_WIDTH),min(rotp_y.y, SCREEN_HEIGHT),offset_x+SCREEN_WIDTH/2,offset_y+SCREEN_HEIGHT/2);
         SDL_SetRenderDrawColor(gRenderer, 0, 0,255,255);
-        SDL_RenderDrawLine(gRenderer, rotp_z.x % SCREEN_WIDTH,rotp_z.y % SCREEN_HEIGHT,SCREEN_WIDTH/2,SCREEN_HEIGHT/2);
+        SDL_RenderDrawLine(gRenderer, min(rotp_z.x, SCREEN_WIDTH),min(rotp_z.y, SCREEN_HEIGHT),offset_x+SCREEN_WIDTH/2,offset_y+SCREEN_HEIGHT/2);
         // SDL_SetRenderDrawColor(gRenderer, 255, 255,255,255);
 
         
@@ -136,23 +141,25 @@ public:
 
 
 
-        rotp_x = vec2(SCREEN_WIDTH*1.0/2 + scale*rot_x.x,SCREEN_HEIGHT/2+scale*rot_x.y);
-        rotp_y = vec2(SCREEN_WIDTH*1.0/2 + scale*rot_y.x,SCREEN_HEIGHT/2+scale*rot_y.y);
-        rotp_z = vec2(SCREEN_WIDTH*1.0/2 + scale*rot_z.x,SCREEN_HEIGHT/2+scale*rot_z.y);
+        rotp_x = vec2(SCREEN_WIDTH*1.0/2 + scale*rot_x.x+offset_x,SCREEN_HEIGHT/2+scale*rot_x.y+offset_y);
+        rotp_y = vec2(SCREEN_WIDTH*1.0/2 + scale*rot_y.x+offset_x,SCREEN_HEIGHT/2+scale*rot_y.y+offset_y);
+        rotp_z = vec2(SCREEN_WIDTH*1.0/2 + scale*rot_z.x+offset_x,SCREEN_HEIGHT/2+scale*rot_z.y+offset_y);
 
-        persp_a = vec2(SCREEN_WIDTH*1.0/2 + scale*(a_r.x+offset_x),SCREEN_HEIGHT/2+scale*(a_r.y+offset_y));
-        persp_b = vec2(SCREEN_WIDTH*1.0/2 + scale*(b_r.x+offset_x),SCREEN_HEIGHT/2+scale*(b_r.y+offset_y));
-        persp_c = vec2(SCREEN_WIDTH*1.0/2 + scale*(c_r.x+offset_x),SCREEN_HEIGHT/2+scale*(c_r.y+offset_y));
+        persp_a = vec2(SCREEN_WIDTH*1.0/2 + scale*a_r.x+offset_x,SCREEN_HEIGHT/2+scale*a_r.y+offset_y);
+        persp_b = vec2(SCREEN_WIDTH*1.0/2 + scale*b_r.x+offset_x,SCREEN_HEIGHT/2+scale*b_r.y+offset_y);
+        persp_c = vec2(SCREEN_WIDTH*1.0/2 + scale*c_r.x+offset_x,SCREEN_HEIGHT/2+scale*c_r.y+offset_y);
         verts =
         {
-            { SDL_FPoint{ persp_a.x, persp_a.y }, SDL_Color{ 255, 0, 0, 255 }, SDL_FPoint{ 0 }, },
-            { SDL_FPoint{ persp_b.x, persp_b.y }, SDL_Color{ 0, 255, 0, 255 }, SDL_FPoint{ 0 }, },
-            { SDL_FPoint{ persp_c.x, persp_c.y }, SDL_Color{ 0, 0, 255, 255 }, SDL_FPoint{ 0 }, },
+            { SDL_FPoint{ persp_a.x, persp_a.y }, SDL_Color{ 255, 255, 255, 255 }, SDL_FPoint{ 0 }, },
+            { SDL_FPoint{ persp_b.x, persp_b.y }, SDL_Color{ 255, 255, 255, 255 }, SDL_FPoint{ 0 }, },
+            { SDL_FPoint{ persp_c.x, persp_c.y }, SDL_Color{ 255, 255, 255, 255 }, SDL_FPoint{ 0 }, }//,
+            // { SDL_FPoint{ persp_a.x, persp_a.y }, SDL_Color{ 255, 0, 0, 255 }, SDL_FPoint{ 0 }, }
+            
         };
     }
     
     void set_scale(int scale_){
-        scale = scale_;
+        scale = max(1,scale_);
     }
 
     void calc_persp(int scale_){
@@ -189,12 +196,21 @@ public:
 
 };
 
+// class obj3d{
+// public:
+
+// };
+
 int main( int argc, char* args[] )
 {
     srand(time(NULL)); // for generating random numbers with rand()
     int faces = 96;
     int vecs = 64;
     int scale = 10;
+    int m_x=0, m_y=0;
+    bool clicked = false;
+    int org_mx = 0, org_my=0;
+    int offset_x=0, offset_y=0, old_offx=0, old_offy=0;
     //Start up SDL and create window
     init();
 
@@ -344,102 +360,102 @@ int main( int argc, char* args[] )
 
     // face faceList[6] = {face(vecList, 5, 2, 3), face(vecList, 4, 5, 3), face(vecList, 1, 5, 4), face(vecList, 5, 1, 2), face(vecList, 4, 3, 2), face(vecList, 1, 4, 2)};
     
-    face faceList[96] = {face(vecList, 1, 2, 3),
-face(vecList, 4, 2, 3),
-face(vecList, 5, 6, 2),
-face(vecList, 1, 6, 2),
-face(vecList, 7, 8, 6),
-face(vecList, 5, 8, 6),
-face(vecList, 4, 3, 8),
-face(vecList, 7, 3, 8),
-face(vecList, 7, 5, 1),
-face(vecList, 4, 5, 1),
-face(vecList, 2, 6, 8),
-face(vecList, 3, 6, 8),
-face(vecList, 9, 10, 11),
-face(vecList, 12, 10, 11),
-face(vecList, 13, 14, 10),
-face(vecList, 9, 14, 10),
-face(vecList, 15, 16, 14),
-face(vecList, 13, 16, 14),
-face(vecList, 12, 11, 16),
-face(vecList, 15, 11, 16),
-face(vecList, 15, 13, 9),
-face(vecList, 12, 13, 9),
-face(vecList, 10, 14, 16),
-face(vecList, 11, 14, 16),
-face(vecList, 17, 18, 19),
-face(vecList, 20, 18, 19),
-face(vecList, 21, 22, 18),
-face(vecList, 17, 22, 18),
-face(vecList, 23, 24, 22),
-face(vecList, 21, 24, 22),
-face(vecList, 20, 19, 24),
-face(vecList, 23, 19, 24),
-face(vecList, 23, 21, 17),
-face(vecList, 20, 21, 17),
-face(vecList, 18, 22, 24),
-face(vecList, 19, 22, 24),
-face(vecList, 25, 26, 27),
-face(vecList, 28, 26, 27),
-face(vecList, 29, 30, 26),
-face(vecList, 25, 30, 26),
-face(vecList, 31, 32, 30),
-face(vecList, 29, 32, 30),
-face(vecList, 28, 27, 32),
-face(vecList, 31, 27, 32),
-face(vecList, 31, 29, 25),
-face(vecList, 28, 29, 25),
-face(vecList, 26, 30, 32),
-face(vecList, 27, 30, 32),
-face(vecList, 33, 34, 35),
-face(vecList, 36, 34, 35),
-face(vecList, 37, 38, 34),
-face(vecList, 33, 38, 34),
-face(vecList, 39, 40, 38),
-face(vecList, 37, 40, 38),
-face(vecList, 36, 35, 40),
-face(vecList, 39, 35, 40),
-face(vecList, 39, 37, 33),
-face(vecList, 36, 37, 33),
-face(vecList, 34, 38, 40),
-face(vecList, 35, 38, 40),
-face(vecList, 41, 42, 43),
-face(vecList, 44, 42, 43),
-face(vecList, 45, 46, 42),
-face(vecList, 41, 46, 42),
-face(vecList, 47, 48, 46),
-face(vecList, 45, 48, 46),
-face(vecList, 44, 43, 48),
-face(vecList, 47, 43, 48),
-face(vecList, 47, 45, 41),
-face(vecList, 44, 45, 41),
-face(vecList, 42, 46, 48),
-face(vecList, 43, 46, 48),
-face(vecList, 49, 50, 51),
-face(vecList, 52, 50, 51),
-face(vecList, 53, 54, 50),
-face(vecList, 49, 54, 50),
-face(vecList, 55, 56, 54),
-face(vecList, 53, 56, 54),
-face(vecList, 52, 51, 56),
-face(vecList, 55, 51, 56),
-face(vecList, 55, 53, 49),
-face(vecList, 52, 53, 49),
-face(vecList, 50, 54, 56),
-face(vecList, 51, 54, 56),
-face(vecList, 57, 58, 59),
-face(vecList, 60, 58, 59),
-face(vecList, 61, 62, 58),
-face(vecList, 57, 62, 58),
-face(vecList, 63, 64, 62),
-face(vecList, 61, 64, 62),
-face(vecList, 60, 59, 64),
-face(vecList, 63, 59, 64),
-face(vecList, 63, 61, 57),
-face(vecList, 60, 61, 57),
-face(vecList, 58, 62, 64),
-face(vecList, 62, 64, 59)};
+    face faceList[96] = {face(vecList,1,2,3),
+face(vecList,1,3,4),
+face(vecList,5,6,2),
+face(vecList,5,2,1),
+face(vecList,7,8,6),
+face(vecList,7,6,5),
+face(vecList,4,3,8),
+face(vecList,4,8,7),
+face(vecList,7,5,1),
+face(vecList,7,1,4),
+face(vecList,2,6,8),
+face(vecList,2,8,3),
+face(vecList,9,10,11),
+face(vecList,9,11,12),
+face(vecList,13,14,10),
+face(vecList,13,10,9),
+face(vecList,15,16,14),
+face(vecList,15,14,13),
+face(vecList,12,11,16),
+face(vecList,12,16,15),
+face(vecList,15,13,9),
+face(vecList,15,9,12),
+face(vecList,10,14,16),
+face(vecList,10,16,11),
+face(vecList,17,18,19),
+face(vecList,17,19,20),
+face(vecList,21,22,18),
+face(vecList,21,18,17),
+face(vecList,23,24,22),
+face(vecList,23,22,21),
+face(vecList,20,19,24),
+face(vecList,20,24,23),
+face(vecList,23,21,17),
+face(vecList,23,17,20),
+face(vecList,18,22,24),
+face(vecList,18,24,19),
+face(vecList,25,26,27),
+face(vecList,25,27,28),
+face(vecList,29,30,26),
+face(vecList,29,26,25),
+face(vecList,31,32,30),
+face(vecList,31,30,29),
+face(vecList,28,27,32),
+face(vecList,28,32,31),
+face(vecList,31,29,25),
+face(vecList,31,25,28),
+face(vecList,26,30,32),
+face(vecList,26,32,27),
+face(vecList,33,34,35),
+face(vecList,33,35,36),
+face(vecList,37,38,34),
+face(vecList,37,34,33),
+face(vecList,39,40,38),
+face(vecList,39,38,37),
+face(vecList,36,35,40),
+face(vecList,36,40,39),
+face(vecList,39,37,33),
+face(vecList,39,33,36),
+face(vecList,34,38,40),
+face(vecList,34,40,35),
+face(vecList,41,42,43),
+face(vecList,41,43,44),
+face(vecList,45,46,42),
+face(vecList,45,42,41),
+face(vecList,47,48,46),
+face(vecList,47,46,45),
+face(vecList,44,43,48),
+face(vecList,44,48,47),
+face(vecList,47,45,41),
+face(vecList,47,41,44),
+face(vecList,42,46,48),
+face(vecList,42,48,43),
+face(vecList,49,50,51),
+face(vecList,49,51,52),
+face(vecList,53,54,50),
+face(vecList,53,50,49),
+face(vecList,55,56,54),
+face(vecList,55,54,53),
+face(vecList,52,51,56),
+face(vecList,52,56,55),
+face(vecList,55,53,49),
+face(vecList,55,49,52),
+face(vecList,50,54,56),
+face(vecList,50,56,51),
+face(vecList,57,58,59),
+face(vecList,57,59,60),
+face(vecList,61,62,58),
+face(vecList,61,58,57),
+face(vecList,63,64,62),
+face(vecList,63,62,61),
+face(vecList,60,59,64),
+face(vecList,60,64,63),
+face(vecList,63,61,57),
+face(vecList,63,57,60),
+face(vecList,58,62,64),
+face(vecList,58,64,59)};
 
     //  for (int i=0; i<10; i++){
     //             printf("Drawing %d ", i);
@@ -533,6 +549,29 @@ face(vecList, 62, 64, 59)};
             {
                 if (e.wheel.y>0) scale += 5;
                 else if (e.wheel.y<0) scale -= 5;
+                break;
+            }
+            case SDL_MOUSEBUTTONDOWN:
+            {
+                clicked = true;
+                SDL_GetMouseState( &org_mx, &org_my );
+                break;
+            }
+            case SDL_MOUSEBUTTONUP:
+            {
+                clicked = false;
+                old_offx = offset_x;
+                old_offy = offset_y;
+                break;
+            }
+            case SDL_MOUSEMOTION:
+            {
+                if (clicked) {
+                    SDL_GetMouseState( &m_x, &m_y );
+                    offset_x = (int) (old_offx + (-org_mx+m_x));//m_x-SCREEN_WIDTH/2;
+                    offset_y = (int) (old_offy + (-org_my+m_y)); //m_y-SCREEN_HEIGHT/2;//
+                }
+                break;
             }
             case SDL_KEYDOWN:
                 /* Check the SDLKey values and move change the coords */
@@ -560,6 +599,8 @@ face(vecList, 62, 64, 59)};
                         alpha = 0;
                         beta  = 0;
                         scale = 10;
+                        offset_x = 0;
+                        offset_y = 0;
                         break;
                     default:
                         break;
@@ -611,6 +652,7 @@ face(vecList, 62, 64, 59)};
                 // faceList[i].rotate(90*3.142/180,k,k*0.5);
                 faceList[i].set_scale(scale);
                 faceList[i].rotate(alpha*3.142/180,beta*3.142/180,gamma*3.142/180);
+                faceList[i].set_offset(offset_x,offset_y);
                 // printf("\n\n");
                 // faceList[i].calc_persp();
                 faceList[i].draw();
