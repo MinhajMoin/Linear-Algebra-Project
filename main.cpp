@@ -234,7 +234,7 @@ public:
 
     object3D(string filename){
         loadOBJ(filename);
-        center_model();
+        // center_model();
         calculate_persp();
         printf("vectors:%d persp:%d faces:%d verts_sdl:%d scale:%d offset_x:%d offset_y:%d\ncenter_offset_x:%f center_offset_y:%f center_offset_z:%f\nalpha:%f beta:%f gamma:%f \n", vectors.size(), 
         persp.size(), faces.size(),verts_sdl.size(), scale, offset_x, offset_y, center_offset_x, center_offset_y, center_offset_z, alpha, beta, gamma);
@@ -269,36 +269,46 @@ public:
         {
             vec3 rot_vector = vectors[i].rotate_(this->alpha, this->beta, this->gamma);
             persp[i] = vec2(SCREEN_WIDTH*1.0/2 + scale*rot_vector.x+offset_x,SCREEN_HEIGHT*1.0/2+scale*rot_vector.y+offset_y);
+            // persp[i] = vec2(SCREEN_WIDTH*1.0/2 + scale*vectors[i].x+offset_x,SCREEN_HEIGHT*1.0/2+scale*vectors[i].y+offset_y);
         }
 
         for (int i = 0; i<faces.size(); i++)
         {
             for (int j = 0; j<faces[i].size(); j++)
             {
-                verts_sdl[i][j] = { SDL_FPoint{ persp[faces[i][j]-1].x , persp[faces[i][j]-1].y }, SDL_Color{ 255, 255, 255, 255 }, SDL_FPoint{ 0 }};
+                verts_sdl[i][j] = { SDL_FPoint{ persp[faces[i][j]-1].x , persp[faces[i][j]-1].y }, SDL_Color{ 255*2/(i+1), 255*2/(i+1), 255*2/(i+1), 255 }, SDL_FPoint{ 0 }};
             }
             
         }
 
     }
 
-    void draw(SDL_Renderer* gRenderer)
+    void fill(SDL_Renderer* gRenderer)
     {
-        printf("Drawing\n");
+        // printf("Drawing\n");
         for (int i = 0; i<faces.size(); i++)
         {
-            // SDL_RenderGeometry( gRenderer, nullptr, verts_sdl[i].data(), verts_sdl[i].size(), nullptr, 0 );
-
-            for (int j = 0; j<faces[i].size(); j++)
-            {
-                printf("i:%d, j:%d %d %d %d %d\t %d %d %d %d %d \n", i, j,persp[faces[i][j]-1].x, persp[faces[i][j]-1].y, persp[faces[i][(j+1)%faces[i].size()]-1].x, persp[faces[i][(j+1)%faces[i].size()]-1].y,
-                    faces[i][j]-1, faces[i][(j+1)%faces[i].size()]-1, faces[i].size(), faces.size(), vectors.size());
-
-                SDL_RenderDrawLine(gRenderer, min(persp[faces[i][j]-1].x, SCREEN_WIDTH),min(persp[faces[i][j]-1].x, SCREEN_HEIGHT),min(persp[faces[i][(j+1)%faces[i].size()]-1].x, SCREEN_WIDTH),min(persp[faces[i][(j+1)%faces[i].size()]-1].y, SCREEN_HEIGHT));
-            }
+            SDL_RenderGeometry( gRenderer, nullptr, verts_sdl[i].data(), verts_sdl[i].size(), nullptr, 0 );
             
         }
         
+    }
+
+    void draw(SDL_Renderer* gRenderer)
+    {
+        for (int i = 0; i<faces.size(); i++)
+        {
+           for (int j = 0; j<faces[i].size(); j++)
+            {
+                // printf("i:%d, j:%d %d %d %d %d\t | %d %d | %d %d %d | vector: %f %f %f | vector to: %f %f %f\n", i, j,persp[faces[i][j]-1].x, persp[faces[i][j]-1].y, persp[faces[i][(j+1)%faces[i].size()]-1].x, persp[faces[i][(j+1)%faces[i].size()]-1].y,
+                //     faces[i][j], faces[i][(j+1)%faces[i].size()], faces[i].size(), faces.size(), vectors.size(), vectors[faces[i][j]-1].x,vectors[faces[i][j]-1].y,vectors[faces[i][j]-1].z,
+                //     vectors[faces[i][(j+1)%faces[i].size()]-1].x,vectors[faces[i][(j+1)%faces[i].size()]-1].y,vectors[faces[i][(j+1)%faces[i].size()]-1].z);
+
+                SDL_RenderDrawLine(gRenderer, persp[faces[i][j]-1].x,persp[faces[i][j]-1].y,persp[faces[i][(j+1)%faces[i].size()]-1].x,persp[faces[i][(j+1)%faces[i].size()]-1].y);
+            }
+            
+        }
+ 
     }
 
      void set_scale(int scale_){
@@ -319,14 +329,17 @@ public:
     {
         while ( getline (myfile,line) )
         {
+
             switch (line[0]){
               case ('v'):
               {
+                // printf("%s\n", line.c_str());
                     v++;
                     break;
               }
               case ('f'):
               {
+                // printf("%s\n", line.c_str());
                     f++;
                     break;
               }
@@ -338,6 +351,7 @@ public:
         printf("%s could not be loaded\n", filename.c_str()); return false;
     }
 
+    printf("Vector Sizes:%d Face Sizes:%d\n", v,f);
     vectors.resize(v);
     persp.resize(v);
     faces.resize(f, vector<int> (3));
@@ -402,6 +416,7 @@ public:
                     }
 
                     lineparse >> temp;
+                    printf(" Spaces: %d\n", spaces);
                     for (int i = 0; i<=spaces; i++)
                     {
                         lineparse >> faces[f_iter][i];
@@ -430,10 +445,10 @@ int main( int argc, char* args[] )
 {
     srand(time(NULL)); // for generating random numbers with rand()
     int scale = 10;
-    int m_x=0, m_y=0;
+    int m_x=0, m_y = 0;
     bool clicked = false;
-    int org_mx = 0, org_my=0;
-    int offset_x=0, offset_y=0, old_offx=0, old_offy=0;
+    int org_mx = 0, org_my = 0;
+    int offset_x = 0, offset_y = 0, old_offx = 0, old_offy = 0;
     //Start up SDL and create window
     init();
 
@@ -446,7 +461,8 @@ int main( int argc, char* args[] )
     int alpha=0, beta=0, gamma=0;
     long int frame = 0;
 
-    object3D humanoid("humanoid_quad.obj");
+    object3D humanoid("cube.obj");
+    humanoid.center_model();
     //While application is running
     while( !quit )
     {
@@ -522,9 +538,10 @@ int main( int argc, char* args[] )
                 }
                 break;
             }
-            humanoid.rotate(alpha, beta, gamma);
+            humanoid.rotate(alpha*3.141/180, beta*3.141/180, gamma*3.141/180);
             humanoid.set_scale(scale);
             humanoid.set_offset(offset_x, offset_y);
+            
             humanoid.calculate_persp();
             // printf("calculate_persp");
         }
@@ -537,7 +554,8 @@ int main( int argc, char* args[] )
 
 
             // Set the color for drawing the lines. White on Black Background
-            SDL_SetRenderDrawColor( gRenderer, 255, 255, 255, 255 );
+            SDL_SetRenderDrawColor(gRenderer, 255, 255, 255, 255);
+
             humanoid.draw(gRenderer);
 
             frame++;
@@ -545,6 +563,7 @@ int main( int argc, char* args[] )
             // SDL_RenderDrawLine(gRenderer, SCREEN_WIDTH/2,0,SCREEN_WIDTH/2,SCREEN_HEIGHT);
             // SDL_RenderDrawLine(gRenderer, 0,SCREEN_HEIGHT/2,SCREEN_WIDTH,SCREEN_HEIGHT/2);
             SDL_RenderPresent(gRenderer);
+            // if (frame == 10) break;
             // if (frame % 60 == 0) {
             //     k+= 1*(3.142/180);
             //     // k+= 10;
