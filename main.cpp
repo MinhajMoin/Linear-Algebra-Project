@@ -88,8 +88,11 @@ public:
         offset_x = x;
         offset_y = y;
     }
-    void draw(){
+    void fill(){
         SDL_RenderGeometry( gRenderer, nullptr, verts.data(), verts.size(), nullptr, 0 );
+    }
+    void draw(){
+        
         SDL_SetRenderDrawColor(gRenderer, 255, 0,0,255);
         // SDL_SetRenderDrawColor(gRenderer, 255, 255,255,255);
         // SDL_RenderDrawPoint(gRenderer, persp_a.x, persp_a.y);
@@ -548,7 +551,7 @@ face(vecList,58,64,59)};
             case SDL_MOUSEWHEEL:
             {
                 if (e.wheel.y>0) scale += 5;
-                else if (e.wheel.y<0) scale -= 5;
+                else if (e.wheel.y<0 & scale > 6) scale -= 5;
                 break;
             }
             case SDL_MOUSEBUTTONDOWN:
@@ -655,6 +658,9 @@ face(vecList,58,64,59)};
                 faceList[i].set_offset(offset_x,offset_y);
                 // printf("\n\n");
                 // faceList[i].calc_persp();
+                faceList[i].fill();
+            }
+            for (int i=0; i<faces; i++){
                 faceList[i].draw();
             }
 
