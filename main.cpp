@@ -29,6 +29,7 @@ public:
         z = v.x * (-sin(b)) + v.y*(sin(a)*cos(b))+v.z*(cos(a)*cos(b));
         // printf("rot: %f %f    ",x,z);
     }
+    
 };
 
 class vec2{
