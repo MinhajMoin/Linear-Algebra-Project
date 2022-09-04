@@ -5,6 +5,15 @@
 #include <math.h>
 #include <vector>
 
+#include <iostream>
+#include <fstream>
+#include <string>
+#include <sstream>
+#include <array>
+
+
+
+
 // #define scale 10
 class vec3{
 public:
@@ -29,7 +38,14 @@ public:
         z = v.x * (-sin(b)) + v.y*(sin(a)*cos(b))+v.z*(cos(a)*cos(b));
         // printf("rot: %f %f    ",x,z);
     }
-    
+
+    vec3 rotate_(float a, float b, float c)
+    {
+        return vec3(x * (cos(b)*cos(c)) + y*(sin(a)*sin(b)*cos(c) - cos(a)*sin(c))+z*(cos(a)*sin(b)*cos(c) + sin(a)*sin(c)),
+            x*(cos(b)*sin(c))+y*(sin(a)*sin(b)*sin(c)+cos(a)*cos(c)) + z*(cos(a)*sin(b)*sin(c)-sin(a)*cos(c)),
+            x * (-sin(b)) + y*(sin(a)*cos(b))+z*(cos(a)*cos(b)));
+    }
+
 };
 
 class vec2{
@@ -205,11 +221,214 @@ public:
 
 // };
 
+class object3D{
+public:
+    std::vector<vec3> vectors;
+    std::vector<vec2> persp;
+    std::vector<std::vector<int>> faces;
+    std::vector<std::vector<SDL_Vertex>> verts_sdl;
+    int scale = 10;
+    int offset_x = 0, offset_y = 0;
+    float alpha = 0.0, beta = 0.0, gamma = 0.0;
+    float center_offset_x = 0, center_offset_y = 0, center_offset_z = 0;
+
+    object3D(string filename){
+        loadOBJ(filename);
+        center_model();
+        calculate_persp();
+        printf("vectors:%d persp:%d faces:%d verts_sdl:%d scale:%d offset_x:%d offset_y:%d\ncenter_offset_x:%f center_offset_y:%f center_offset_z:%f\nalpha:%f beta:%f gamma:%f \n", vectors.size(), 
+        persp.size(), faces.size(),verts_sdl.size(), scale, offset_x, offset_y, center_offset_x, center_offset_y, center_offset_z, alpha, beta, gamma);
+    }
+
+    void rotate(float alpha_, float beta_, float gamma_)
+    {
+        alpha = alpha_;
+        beta = beta_;
+        gamma = gamma_;
+    }
+
+    void set_offset(int x, int y)
+    {
+        offset_x = x;
+        offset_y = y;
+    }
+
+    void center_model()
+    {
+        for (int i = 0; i<vectors.size(); i++)
+        {
+            vectors[i].x -= center_offset_x;
+            vectors[i].y -= center_offset_y;
+            vectors[i].z -= center_offset_z;
+        }
+    }
+
+    void calculate_persp()
+    {
+        for (int i = 0; i<vectors.size(); i++)
+        {
+            vec3 rot_vector = vectors[i].rotate_(this->alpha, this->beta, this->gamma);
+            persp[i] = vec2(SCREEN_WIDTH*1.0/2 + scale*rot_vector.x+offset_x,SCREEN_HEIGHT*1.0/2+scale*rot_vector.y+offset_y);
+        }
+
+        for (int i = 0; i<faces.size(); i++)
+        {
+            for (int j = 0; j<faces[i].size(); j++)
+            {
+                verts_sdl[i][j] = { SDL_FPoint{ persp[faces[i][j]-1].x , persp[faces[i][j]-1].y }, SDL_Color{ 255, 255, 255, 255 }, SDL_FPoint{ 0 }};
+            }
+            
+        }
+
+    }
+
+    void draw(SDL_Renderer* gRenderer)
+    {
+        printf("Drawing\n");
+        for (int i = 0; i<faces.size(); i++)
+        {
+            // SDL_RenderGeometry( gRenderer, nullptr, verts_sdl[i].data(), verts_sdl[i].size(), nullptr, 0 );
+
+            for (int j = 0; j<faces[i].size(); j++)
+            {
+                printf("i:%d, j:%d %d %d %d %d\t %d %d %d %d %d \n", i, j,persp[faces[i][j]-1].x, persp[faces[i][j]-1].y, persp[faces[i][(j+1)%faces[i].size()]-1].x, persp[faces[i][(j+1)%faces[i].size()]-1].y,
+                    faces[i][j]-1, faces[i][(j+1)%faces[i].size()]-1, faces[i].size(), faces.size(), vectors.size());
+
+                SDL_RenderDrawLine(gRenderer, min(persp[faces[i][j]-1].x, SCREEN_WIDTH),min(persp[faces[i][j]-1].x, SCREEN_HEIGHT),min(persp[faces[i][(j+1)%faces[i].size()]-1].x, SCREEN_WIDTH),min(persp[faces[i][(j+1)%faces[i].size()]-1].y, SCREEN_HEIGHT));
+            }
+            
+        }
+        
+    }
+
+     void set_scale(int scale_){
+        scale = max(1,scale_);
+    }
+
+    bool loadOBJ(string filename)
+    {
+    string line;
+    int v=0;
+    int f =0;
+    ifstream myfile;
+    string temp;
+    myfile.open(filename);
+
+    stringstream lineparse;
+    if (myfile.is_open())
+    {
+        while ( getline (myfile,line) )
+        {
+            switch (line[0]){
+              case ('v'):
+              {
+                    v++;
+                    break;
+              }
+              case ('f'):
+              {
+                    f++;
+                    break;
+              }
+            }
+        }
+        myfile.close();
+    }
+    else {
+        printf("%s could not be loaded\n", filename.c_str()); return false;
+    }
+
+    vectors.resize(v);
+    persp.resize(v);
+    faces.resize(f, vector<int> (3));
+    verts_sdl.resize(f, vector<SDL_Vertex> (3));
+
+    myfile.open(filename);
+
+    float max_x;
+    float max_y;
+    float max_z;
+    float min_x;
+    float min_y;
+    float min_z;
+    int v_iter = 0, f_iter=0;
+
+      if (myfile.is_open())
+      {
+        while ( getline (myfile,line) )
+        {
+          switch (line[0]){
+              case ('v'):
+                {
+                    std::array<float, 3> v;
+                    lineparse << line;
+                    lineparse >> temp >> v[0] >> v[1] >> v[2];
+                    vectors[v_iter] = vec3(v[0], v[1], v[2]);
+
+                    if (v_iter == 0){
+                        max_x = v[0];
+                        max_y = v[1];
+                        max_z = v[2];
+                        min_x = v[0];
+                        min_y = v[1];
+                        min_z = v[2];
+                    }
+
+                    if (v[0] > max_x) max_x = v[0];
+                    else if (v[0] < min_x) min_x = v[0];
+
+                    if (v[1] > max_y) max_y = v[1];
+                    else if (v[1] < min_y) min_y = v[1];
+                    
+                    if (v[2] > max_z) max_z = v[2];
+                    else if (v[2] < max_z) min_z = v[2];
+
+                    lineparse.str( std::string() );
+                    lineparse.clear();
+                    // cout << temp << ' ' << vectors[v_iter][0] << ' '<< vectors[v_iter][1] << ' '<< vectors[v_iter][2] << endl;
+                    v_iter++;
+                    break;
+                }
+              case ('f'):
+                {
+                    int spaces = 0;
+                    lineparse << line;
+                    for (int i = 0; i<line.length(); i++){
+                        if (line[i] == ' ') spaces++;
+                    }
+                    if (spaces > 3) {
+                        faces[f_iter].resize(spaces, 0);
+                        verts_sdl[f_iter].resize(spaces);
+                    }
+
+                    lineparse >> temp;
+                    for (int i = 0; i<=spaces; i++)
+                    {
+                        lineparse >> faces[f_iter][i];
+                    }
+                    lineparse.str( std::string() );
+                    lineparse.clear();
+                    f_iter++;
+                    break;
+                }
+        }
+        }
+        myfile.close();
+      }
+        center_offset_x = (max_x+min_x)/2;
+        center_offset_y = (max_y+min_y)/2;
+        center_offset_z = (max_z+min_z)/2;
+        return true;
+    }
+
+
+
+
+};
+
 int main( int argc, char* args[] )
 {
     srand(time(NULL)); // for generating random numbers with rand()
-    int faces = 96;
-    int vecs = 64;
     int scale = 10;
     int m_x=0, m_y=0;
     bool clicked = false;
@@ -221,321 +440,13 @@ int main( int argc, char* args[] )
     bool quit = false;  //Main loop controller
 
     SDL_Event e;        //Event handler that takes care of all events
-
-    int centrex = SCREEN_WIDTH/2;
-    int centrey = SCREEN_HEIGHT/2;
-    //----------------------------------------------------------
-//    A = (1, 4, -9),
-//    B = (1, 4, -10),
-//    C = (1, 6, -10),
-//    D = (1, 6, -9),
-//    E = (-1, 4, -9),
-//    F = (-1, 4, -10),
-//    G = (-1, 6, -10),
-//    H = (-1, 6, -9);
-
-    // vec3 vecList[8] =  {vec3(0.0,0.0,0.0),
-    //                     vec3(0.0,0.0,1.0),
-    //                     vec3(0.0,1.0,0.0),
-    //                     vec3(0.0,1.0,1.0),
-    //                     vec3(1.0,0.0,0.0),
-    //                     vec3(1.0,0.0,1.0),
-    //                     vec3(1.0,1.0,0.0),
-    //                     vec3(1.0,1.0,1.0)};
-
-
-    // vec3 vecList[5] = {vec3(0,0,0), vec3(1,0,0), vec3(1,1,0), vec3(0,1,0), vec3(0.5,0.5,1.6)};
-    // vec3 vecList[5] = {vec3(-1,-1,0), vec3(1,-1,0), vec3(1,1,0), vec3(-1,1,0), vec3(0,0,2)};
-
     
-    
-
-    vec3 vecList[64] = {vec3(3.25000, -2.48000, 14.0000, 1.00000),
-    vec3(3.25000, -2.48000, 9.01000, 1.00000),
-    vec3(3.25000, 2.48000, 9.01000, 1.00000),
-    vec3(3.25000, 2.48000, 14.0000, 1.00000),
-    vec3(0.773000, -2.48000, 14.0000, 1.00000),
-    vec3(0.773000, -2.48000, 9.01000, 1.00000),
-    vec3(0.773000, 2.48000, 14.0000, 1.00000),
-    vec3(0.773000, 2.48000, 9.01000, 1.00000),
-    vec3(3.47000, -1.29000, 17.4000, 1.00000),
-    vec3(3.47000, -1.29000, 15.0000, 1.00000),
-    vec3(3.47000, 1.19000, 15.0000, 1.00000),
-    vec3(3.47000, 1.19000, 17.4000, 1.00000),
-    vec3(0.601000, -1.29000, 17.4000, 1.00000),
-    vec3(0.601000, -1.29000, 15.0000, 1.00000),
-    vec3(0.601000, 1.19000, 17.4000, 1.00000),
-    vec3(0.601000, 1.19000, 15.0000, 1.00000),
-    vec3(3.15000, -2.47000, 8.01000, 1.00000),
-    vec3(3.15000, -2.47000, 3.05000, 1.00000),
-    vec3(3.15000, -0.486000, 3.05000, 1.00000),
-    vec3(3.15000, -0.486000, 8.01000, 1.00000),
-    vec3(0.892000, -2.47000, 8.01000, 1.00000),
-    vec3(0.892000, -2.47000, 3.05000, 1.00000),
-    vec3(0.892000, -0.486000, 8.01000, 1.00000),
-    vec3(0.892000, -0.486000, 3.05000, 1.00000),
-    vec3(3.23000, -3.96000, 14.0000, 1.00000),
-    vec3(3.23000, -3.96000, 9.01000, 1.00000),
-    vec3(3.23000, -2.48000, 9.01000, 1.00000),
-    vec3(3.23000, -2.48000, 14.0000, 1.00000),
-    vec3(0.747000, -3.96000, 14.0000, 1.00000),
-    vec3(0.747000, -3.96000, 9.01000, 1.00000),
-    vec3(0.747000, -2.48000, 14.0000, 1.00000),
-    vec3(0.747000, -2.48000, 9.01000, 1.00000),
-    vec3(3.27000, 2.46000, 14.0000, 1.00000),
-    vec3(3.27000, 2.46000, 9.01000, 1.00000),
-    vec3(3.27000, 3.95000, 9.01000, 1.00000),
-    vec3(3.27000, 3.95000, 14.0000, 1.00000),
-    vec3(0.795000, 2.46000, 14.0000, 1.00000),
-    vec3(0.795000, 2.46000, 9.01000, 1.00000),
-    vec3(0.795000, 3.95000, 14.0000, 1.00000),
-    vec3(0.795000, 3.95000, 9.01000, 1.00000),
-    vec3(2.49000, -0.498000, 15.0000, 1.00000),
-    vec3(2.49000, -0.498000, 14.0000, 1.00000),
-    vec3(2.49000, 0.493000, 14.0000, 1.00000),
-    vec3(2.49000, 0.493000, 15.0000, 1.00000),
-    vec3(1.50000, -0.498000, 15.0000, 1.00000),
-    vec3(1.50000, -0.498000, 14.0000, 1.00000),
-    vec3(1.50000, 0.493000, 15.0000, 1.00000),
-    vec3(1.50000, 0.493000, 14.0000, 1.00000),
-    vec3(3.25000, -2.50000, 9.01000, 1.00000),
-    vec3(3.25000, -2.50000, 8.01000, 1.00000),
-    vec3(3.25000, 2.45000, 8.01000, 1.00000),
-    vec3(3.25000, 2.45000, 9.01000, 1.00000),
-    vec3(0.771000, -2.50000, 9.01000, 1.00000),
-    vec3(0.771000, -2.50000, 8.01000, 1.00000),
-    vec3(0.771000, 2.45000, 9.01000, 1.00000),
-    vec3(0.771000, 2.45000, 8.01000, 1.00000),
-    vec3(3.27000, 0.465000, 8.01000, 1.00000),
-    vec3(3.27000, 0.465000, 3.05000, 1.00000),
-    vec3(3.27000, 2.45000, 3.05000, 1.00000),
-    vec3(3.27000, 2.45000, 8.01000, 1.00000),
-    vec3(0.795000, 0.465000, 8.01000, 1.00000),
-    vec3(0.795000, 0.465000, 3.05000, 1.00000),
-    vec3(0.795000, 2.45000, 8.01000, 1.00000),
-    vec3(0.795000, 2.45000, 3.05000, 1.00000)};
-    // vec3 vecList[8] =  {vec3(1, 4, -9),
-    //                     vec3(1, 4, -10),
-    //                     vec3(1, 6, -10),
-    //                     vec3(1, 6, -9),
-    //                     vec3(-1, 4, -9),
-    //                     vec3(-1, 4, -10),
-    //                     vec3(-1, 6, -10),
-    //                     vec3(-1, 6, -9)};
-    // for (int j=0;j<8;j++)
-    // {
-    //     printf("%d ",j);
-    //     vecList[j].vecprint();
-    //     printf("\n");
-    // }
-
-
-
-
-
-    float max_x = vecList[0].x;
-    float max_y = vecList[0].y;
-    float max_z = vecList[0].z;
-    float min_x = vecList[0].x;
-    float min_y = vecList[0].y;
-    float min_z = vecList[0].z;
-    for (int i=0; i<vecs; i++)
-    {
-        if (vecList[i].x > max_x) max_x = vecList[i].x;
-        if (vecList[i].y > max_y) max_y = vecList[i].y;
-        if (vecList[i].z > max_z) max_z = vecList[i].z;
-        
-        if (vecList[i].x < min_x) min_x = vecList[i].x;
-        if (vecList[i].y < min_y) min_y = vecList[i].y;
-        if (vecList[i].z < max_z) min_z = vecList[i].z;
-    }
-    printf("MAX Coords = %f %f %f , MIN Coords = %f %f %f\n",max_x, max_y, max_z, min_x, min_y, min_z);
-    printf("Mid Point Coords = %f %f %f \n",(max_x+min_x)/2, (max_y+min_y)/2, (max_z+min_z)/2);
-    for (int i=0; i<vecs; i++)
-    {
-        
-        vecList[i].x -= (max_x+min_x)/2;
-        vecList[i].y -= (max_y+min_y)/2;
-        vecList[i].z -= (max_z+min_z)/2;
-    }
-
-    // face faceList[12] = { face(vecList,1,7,5),  face(vecList,1,3,7),  face(vecList,1,4,3),  face(vecList,1,2,4),  face(vecList,3,8,7),  face(vecList,3,4,8), 
-    //  face(vecList,5,7,8),  face(vecList,5,8,6),  face(vecList,1,5,6),  face(vecList,1,6,2),  face(vecList,2,6,8),  face(vecList,2,8,4)};
-
-    // face faceList[6] = {face(vecList, 5, 2, 3), face(vecList, 4, 5, 3), face(vecList, 1, 5, 4), face(vecList, 5, 1, 2), face(vecList, 4, 3, 2), face(vecList, 1, 4, 2)};
-    
-    face faceList[96] = {face(vecList,1,2,3),
-face(vecList,1,3,4),
-face(vecList,5,6,2),
-face(vecList,5,2,1),
-face(vecList,7,8,6),
-face(vecList,7,6,5),
-face(vecList,4,3,8),
-face(vecList,4,8,7),
-face(vecList,7,5,1),
-face(vecList,7,1,4),
-face(vecList,2,6,8),
-face(vecList,2,8,3),
-face(vecList,9,10,11),
-face(vecList,9,11,12),
-face(vecList,13,14,10),
-face(vecList,13,10,9),
-face(vecList,15,16,14),
-face(vecList,15,14,13),
-face(vecList,12,11,16),
-face(vecList,12,16,15),
-face(vecList,15,13,9),
-face(vecList,15,9,12),
-face(vecList,10,14,16),
-face(vecList,10,16,11),
-face(vecList,17,18,19),
-face(vecList,17,19,20),
-face(vecList,21,22,18),
-face(vecList,21,18,17),
-face(vecList,23,24,22),
-face(vecList,23,22,21),
-face(vecList,20,19,24),
-face(vecList,20,24,23),
-face(vecList,23,21,17),
-face(vecList,23,17,20),
-face(vecList,18,22,24),
-face(vecList,18,24,19),
-face(vecList,25,26,27),
-face(vecList,25,27,28),
-face(vecList,29,30,26),
-face(vecList,29,26,25),
-face(vecList,31,32,30),
-face(vecList,31,30,29),
-face(vecList,28,27,32),
-face(vecList,28,32,31),
-face(vecList,31,29,25),
-face(vecList,31,25,28),
-face(vecList,26,30,32),
-face(vecList,26,32,27),
-face(vecList,33,34,35),
-face(vecList,33,35,36),
-face(vecList,37,38,34),
-face(vecList,37,34,33),
-face(vecList,39,40,38),
-face(vecList,39,38,37),
-face(vecList,36,35,40),
-face(vecList,36,40,39),
-face(vecList,39,37,33),
-face(vecList,39,33,36),
-face(vecList,34,38,40),
-face(vecList,34,40,35),
-face(vecList,41,42,43),
-face(vecList,41,43,44),
-face(vecList,45,46,42),
-face(vecList,45,42,41),
-face(vecList,47,48,46),
-face(vecList,47,46,45),
-face(vecList,44,43,48),
-face(vecList,44,48,47),
-face(vecList,47,45,41),
-face(vecList,47,41,44),
-face(vecList,42,46,48),
-face(vecList,42,48,43),
-face(vecList,49,50,51),
-face(vecList,49,51,52),
-face(vecList,53,54,50),
-face(vecList,53,50,49),
-face(vecList,55,56,54),
-face(vecList,55,54,53),
-face(vecList,52,51,56),
-face(vecList,52,56,55),
-face(vecList,55,53,49),
-face(vecList,55,49,52),
-face(vecList,50,54,56),
-face(vecList,50,56,51),
-face(vecList,57,58,59),
-face(vecList,57,59,60),
-face(vecList,61,62,58),
-face(vecList,61,58,57),
-face(vecList,63,64,62),
-face(vecList,63,62,61),
-face(vecList,60,59,64),
-face(vecList,60,64,63),
-face(vecList,63,61,57),
-face(vecList,63,57,60),
-face(vecList,58,62,64),
-face(vecList,58,64,59)};
-
-    //  for (int i=0; i<10; i++){
-    //             printf("Drawing %d ", i);
-    //             faceList[i].printFace();
-    // }
-
-
-    // COPIED FROM LA ASSIGNMENT 2 Q3 BECAUSE I AM TOO DUMB TO COME UP WITH MY OWN COORDINATES
-    // float coords [8][3];
-    // float perspCoords [8][2];
-    // float rotatedCoords [8][3];
-    // int ind = 0;
-    // int dist = -1;
-    // cout << "Original Coordinates" << endl;
-    // for (int i = -1; i < 2; i+=2)
-    // {
-    //     for (int j = 4; j<7; j+=2)
-    //     {
-    //         for (int k = -10; k < -8; k++)
-    //         {
-    //             coords[ind][0] = i;
-    //             coords[ind][1] = j;
-    //             coords[ind][2] = k;
-    //             cout << i << ' ' << j << ' ' << k << endl;
-    //             ind++;
-    //         }
-    //     }
-    // }
-
-    //==================================================================
-    // SACRED CODE AHEAD. DONT TOUCH IT WITHOUT BEGGING FOR FORGIVENESS
-    // OF YOUR SINS. PERFORM ABLUTION BEFORE CHANGING ANYTHING.
-    //==================================================================
-    // rotated coordinates after applying rotation matrix on the y-axis
-    // x = x*cos(1) + z*sin(1);
-    // y = y;
-    // z = -x*sin(1) + z*cos(1);
-    //----------------------------------------------------------------------//
-    //                          Rotated Coordinates                         //
-    //----------------------------------------------------------------------//
-    // cout << "Rotated Coordinates " << endl;
-    // for (int i = 0; i < 8 ; i++)
-    // {
-    //     rotatedCoords[i][0] = coords[i][0]*cos(0) + coords[i][2]*sin(0);
-    //     rotatedCoords[i][1] = coords[i][1];
-    //     rotatedCoords[i][2] = -coords[i][0]*sin(0) + coords[i][2]*cos(0);
-    //     cout << rotatedCoords[i][0] << ' ' << rotatedCoords[i][1] << ' ' << rotatedCoords[i][2] << endl;
-    // }
-
-
-    //----------------------------------------------------------------------//
-    //                  Perspective Projection Coordinates                  //
-    //----------------------------------------------------------------------//
-    // cout << "Perspective Projection Coordinates " << endl;
-    // for (int i = 0; i < 8 ; i++)
-    // {
-    //     perspCoords[i][0] = centrex + 20* dist * rotatedCoords[i][0] / rotatedCoords[i][2]; // x' = dx/z
-    //     perspCoords[i][1] = centrey/2 + 20*dist * rotatedCoords[i][1] / rotatedCoords[i][2]; // y' = dy/z
-    //     cout << '(' << perspCoords[i][0] << ',' << perspCoords[i][1] << ')'<< endl;
-    // }
-    //----------------------------------------------------------------------
-    // Now to convert the projected coordinates to something the SDL Window
-    // Can Show.
-
-    int xout[4] = {centrex+200, (centrex-200),(centrex+140), (centrex-140)};
-    int yout[4] = {centrey+200, (centrey-200),(centrey+140), (centrey-140)};
-
-//    int xout[2] = {centrex+50*perspCoords[0][0], (centrex+50*perspCoords[1][0])};
-//    int yout[2] = {centrey+50*perspCoords[0][1], (centrey+50*perspCoords[1][1])};
-//    int xin[2] = {centrex+50*perspCoords[2][0], (centrex+50*perspCoords[3][0])};
-//    int yin[2] = {centrey+50*perspCoords[3][1], (centrey+50*perspCoords[3][1])};
-
     SDL_RenderClear( gRenderer ); //Clear window when the program starts.
     double k = 0.0;
     int alpha=0, beta=0, gamma=0;
     long int frame = 0;
+
+    object3D humanoid("humanoid_quad.obj");
     //While application is running
     while( !quit )
     {
@@ -611,78 +522,28 @@ face(vecList,58,64,59)};
                 }
                 break;
             }
+            humanoid.rotate(alpha, beta, gamma);
+            humanoid.set_scale(scale);
+            humanoid.set_offset(offset_x, offset_y);
+            humanoid.calculate_persp();
+            // printf("calculate_persp");
         }
-        //Clear screen
-    //     for (int i = 0; i < 8 ; i++)
-    //     {
-    //         rotatedCoords[i][0] = coords[i][0]*cos(0) + coords[i][2]*sin(0);
-    //         rotatedCoords[i][1] = coords[i][1] + coords[i][2] * cos(k) + coords[i][1] * cos(k);
-    //         rotatedCoords[i][2] = -coords[i][0]*sin(0) + coords[i][2]*cos(0);
-    // //        cout << rotatedCoords[i][0] << ' ' << rotatedCoords[i][1] << ' ' << rotatedCoords[i][2] << endl;
-    //     }
+            // printf("%d\r", frame);
 
-
-        //----------------------------------------------------------------------//
-        //                  Perspective Projection Coordinates                  //
-        //----------------------------------------------------------------------//
-    //    cout << "Perspective Projection Coordinates " << endl;
-    //     for (int i = 0; i < 8 ; i++)
-    //     {
-    //         perspCoords[i][0] = centrex + 200* dist * rotatedCoords[i][0] / rotatedCoords[i][2]; // x' = dx/z
-    //         perspCoords[i][1] = centrey/2 + 200*dist * rotatedCoords[i][1] / rotatedCoords[i][2]; // y' = dy/z
-    // //        cout << '(' << perspCoords[i][0] << ',' << perspCoords[i][1] << ')'<< endl;
-    //     }
             SDL_SetRenderDrawColor( gRenderer, 0, 0, 0, 255 );
             SDL_RenderClear( gRenderer );
+
+            
+
+
             // Set the color for drawing the lines. White on Black Background
             SDL_SetRenderDrawColor( gRenderer, 255, 255, 255, 255 );
-
-    //        SDL_RenderDrawLine(gRenderer, xout[1],yout[1],xout[0],yout[1]);
-    //        SDL_RenderDrawLine(gRenderer, xout[1],yout[0],xout[0],yout[0]);
-    //        SDL_RenderDrawLine(gRenderer, xout[0],yout[1],xout[0],yout[0]);
-    //        SDL_RenderDrawLine(gRenderer, xout[1],yout[1],xout[1],yout[0]);
-    //        SDL_RenderDrawLine(gRenderer, xout[2],   yout[2] ,xout[3],yout[2]);
-    //        SDL_RenderDrawLine(gRenderer, xout[2],   yout[2] ,xout[2],yout[3]);
-    //        SDL_RenderDrawLine(gRenderer, xout[3],   yout[2] ,xout[3],yout[3]);
-    //        SDL_RenderDrawLine(gRenderer, xout[3],   yout[3] ,xout[2],yout[3]);
-    //        SDL_RenderDrawLine(gRenderer, xout[2], yout[2] ,xout[0],yout[0]);
-    //        SDL_RenderDrawLine(gRenderer, xout[3], yout[2] ,xout[1],yout[0]);
-    //        SDL_RenderDrawLine(gRenderer, xout[2], yout[3] ,xout[0],yout[1]);
-    //        SDL_RenderDrawLine(gRenderer, xout[3], yout[3] ,xout[1],yout[1]);
+            humanoid.draw(gRenderer);
 
             frame++;
-            for (int i=0; i<faces; i++){
-                // printf("Drawing %d ", i);
-                // faceList[i].rotate(90*3.142/180,k,k*0.5);
-                faceList[i].set_scale(scale);
-                faceList[i].rotate(alpha*3.142/180,beta*3.142/180,gamma*3.142/180);
-                faceList[i].set_offset(offset_x,offset_y);
-                // printf("\n\n");
-                // faceList[i].calc_persp();
-                faceList[i].fill();
-            }
-            for (int i=0; i<faces; i++){
-                faceList[i].draw();
-            }
 
-            SDL_RenderDrawLine(gRenderer, SCREEN_WIDTH/2,0,SCREEN_WIDTH/2,SCREEN_HEIGHT);
-            SDL_RenderDrawLine(gRenderer, 0,SCREEN_HEIGHT/2,SCREEN_WIDTH,SCREEN_HEIGHT/2);
-            // SDL_RenderDrawLine(gRenderer, perspCoords[0][0],perspCoords[0][1],perspCoords[2][0],perspCoords[2][1]);
-            // SDL_RenderDrawLine(gRenderer, perspCoords[0][0],perspCoords[0][1],perspCoords[4][0],perspCoords[4][1]);
-
-            // SDL_RenderDrawLine(gRenderer, perspCoords[5][0],perspCoords[5][1],perspCoords[4][0],perspCoords[4][1]);
-            // SDL_RenderDrawLine(gRenderer, perspCoords[5][0],perspCoords[5][1],perspCoords[1][0],perspCoords[1][1]);
-            // SDL_RenderDrawLine(gRenderer, perspCoords[5][0],perspCoords[5][1],perspCoords[7][0],perspCoords[7][1]);
-
-            // SDL_RenderDrawLine(gRenderer, perspCoords[6][0],perspCoords[6][1],perspCoords[2][0],perspCoords[2][1]);
-            // SDL_RenderDrawLine(gRenderer, perspCoords[6][0],perspCoords[6][1],perspCoords[4][0],perspCoords[4][1]);
-            // SDL_RenderDrawLine(gRenderer, perspCoords[6][0],perspCoords[6][1],perspCoords[7][0],perspCoords[7][1]);
-
-            // SDL_RenderDrawLine(gRenderer, perspCoords[3][0],perspCoords[3][1],perspCoords[7][0],perspCoords[7][1]);
-            // SDL_RenderDrawLine(gRenderer, perspCoords[3][0],perspCoords[3][1],perspCoords[2][0],perspCoords[2][1]);
-            // SDL_RenderDrawLine(gRenderer, perspCoords[3][0],perspCoords[3][1],perspCoords[1][0],perspCoords[1][1]);
-
-            //=============================================================
+            // SDL_RenderDrawLine(gRenderer, SCREEN_WIDTH/2,0,SCREEN_WIDTH/2,SCREEN_HEIGHT);
+            // SDL_RenderDrawLine(gRenderer, 0,SCREEN_HEIGHT/2,SCREEN_WIDTH,SCREEN_HEIGHT/2);
             SDL_RenderPresent(gRenderer);
             // if (frame % 60 == 0) {
             //     k+= 1*(3.142/180);
@@ -694,6 +555,7 @@ face(vecList,58,64,59)};
             //     // printf("\n\n");
             // }
     }
+
     close(); // DeAllocation of dynamic arrays and objects and destruction of SDL window
     return 0;
 }
