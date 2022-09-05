@@ -226,6 +226,8 @@ public:
     std::vector<vec3> vectors;
     std::vector<vec2> persp;
     std::vector<std::vector<int>> faces;
+    std::vector<int> faceZ;
+    std::vector<SDL_Color> faceColors;
     std::vector<std::vector<SDL_Vertex>> verts_sdl;
     int scale = 10;
     int offset_x = 0, offset_y = 0;
@@ -235,6 +237,16 @@ public:
     object3D(string filename){
         loadOBJ(filename);
         // center_model();
+        faceZ.resize(faces.size());
+        faceColors.resize(faces.size());
+        std::iota(faceZ.begin(), faceZ.end(), 0);
+
+
+        for (int i = 0; i< faceColors.size(); i++)
+        {
+            faceColors[i] = {rand() % 256, rand() % 256, rand() % 256,255};
+            // faceColors[i] = {95, 200, 128,255};
+        }
         calculate_persp();
         printf("vectors:%d persp:%d faces:%d verts_sdl:%d scale:%d offset_x:%d offset_y:%d\ncenter_offset_x:%f center_offset_y:%f center_offset_z:%f\nalpha:%f beta:%f gamma:%f \n", vectors.size(), 
         persp.size(), faces.size(),verts_sdl.size(), scale, offset_x, offset_y, center_offset_x, center_offset_y, center_offset_z, alpha, beta, gamma);
@@ -245,6 +257,27 @@ public:
         alpha = alpha_;
         beta = beta_;
         gamma = gamma_;
+    }
+
+    void sort_faces()
+    {
+        vector<float> faceZ_means(faces.size());
+        for (int i = 0; i< faces.size(); i++)
+        {
+            float sumval = 0;
+            for (int j = 0; j<faces[i].size(); j++)
+            {
+                sumval += vectors[faces[i][j]].z;
+            }
+            faceZ_means[i] = sumval / faces[i].size();
+        }
+
+        std::iota(faceZ.begin(), faceZ.end(), 0);
+
+        std::sort(faceZ.begin(), faceZ.end(),
+            [&](int A, int B) -> bool {
+                return faceZ_means[A] > faceZ_means[B];
+        });
     }
 
     void set_offset(int x, int y)
@@ -276,7 +309,7 @@ public:
         {
             for (int j = 0; j<faces[i].size(); j++)
             {
-                verts_sdl[i][j] = { SDL_FPoint{ persp[faces[i][j]-1].x , persp[faces[i][j]-1].y }, SDL_Color{ 255*2/(i+1), 255*2/(i+1), 255*2/(i+1), 255 }, SDL_FPoint{ 0 }};
+                verts_sdl[i][j] = { SDL_FPoint{ persp[faces[i][j]-1].x , persp[faces[i][j]-1].y }, faceColors[i], SDL_FPoint{ 0 }};
             }
             
         }
@@ -288,7 +321,17 @@ public:
         // printf("Drawing\n");
         for (int i = 0; i<faces.size(); i++)
         {
-            SDL_RenderGeometry( gRenderer, nullptr, verts_sdl[i].data(), verts_sdl[i].size(), nullptr, 0 );
+
+            if (faces[i].size() == 3) { SDL_RenderGeometry( gRenderer, nullptr, verts_sdl[faceZ[i]].data(), verts_sdl[faceZ[i]].size(), nullptr, 0 ); }
+            else
+            {
+                
+                for (int k = 0; k < faces[i].size()-2; k++)
+                {
+                    vector<SDL_Vertex> verts_temp = {verts_sdl[faceZ[i]][0],  verts_sdl[faceZ[i]][k+1], verts_sdl[faceZ[i]][k+2]};
+                    SDL_RenderGeometry( gRenderer, nullptr, verts_temp.data(), verts_temp.size(), nullptr, 0 ); 
+                }
+            }
             
         }
         
@@ -303,12 +346,10 @@ public:
                 // printf("i:%d, j:%d %d %d %d %d\t | %d %d | %d %d %d | vector: %f %f %f | vector to: %f %f %f\n", i, j,persp[faces[i][j]-1].x, persp[faces[i][j]-1].y, persp[faces[i][(j+1)%faces[i].size()]-1].x, persp[faces[i][(j+1)%faces[i].size()]-1].y,
                 //     faces[i][j], faces[i][(j+1)%faces[i].size()], faces[i].size(), faces.size(), vectors.size(), vectors[faces[i][j]-1].x,vectors[faces[i][j]-1].y,vectors[faces[i][j]-1].z,
                 //     vectors[faces[i][(j+1)%faces[i].size()]-1].x,vectors[faces[i][(j+1)%faces[i].size()]-1].y,vectors[faces[i][(j+1)%faces[i].size()]-1].z);
-
-                SDL_RenderDrawLine(gRenderer, persp[faces[i][j]-1].x,persp[faces[i][j]-1].y,persp[faces[i][(j+1)%faces[i].size()]-1].x,persp[faces[i][(j+1)%faces[i].size()]-1].y);
-            }
-            
+                SDL_SetRenderDrawColor(gRenderer,faceColors[faceZ[i]].r,faceColors[faceZ[i]].g,faceColors[faceZ[i]].b,255);
+                SDL_RenderDrawLine(gRenderer, persp[faces[faceZ[i]][j]-1].x,persp[faces[faceZ[i]][j]-1].y,persp[faces[faceZ[i]][(j+1)%faces[i].size()]-1].x,persp[faces[faceZ[i]][(j+1)%faces[i].size()]-1].y);
+            }   
         }
- 
     }
 
      void set_scale(int scale_){
@@ -449,6 +490,22 @@ int main( int argc, char* args[] )
     bool clicked = false;
     int org_mx = 0, org_my = 0;
     int offset_x = 0, offset_y = 0, old_offx = 0, old_offy = 0;
+    
+
+    char filename[25];
+
+    const std::vector< SDL_Vertex > verts =
+            {
+                { SDL_FPoint{ 400, 100 }, SDL_Color{ 255, 0, 0, 255 }, SDL_FPoint{ 0 }, },
+                { SDL_FPoint{ 600, 100 }, SDL_Color{ 0, 0, 255, 255 }, SDL_FPoint{ 0 }, },
+                { SDL_FPoint{ 600, 450 }, SDL_Color{ 0, 255, 0, 255 }, SDL_FPoint{ 0 }, }
+                // { SDL_FPoint{ 400, 450 }, SDL_Color{ 0, 255, 0, 255 }, SDL_FPoint{ 0 }, }
+            };
+
+
+    printf("Enter obj file to load\n");
+    scanf("%24s", filename);
+
     //Start up SDL and create window
     init();
 
@@ -461,7 +518,7 @@ int main( int argc, char* args[] )
     int alpha=0, beta=0, gamma=0;
     long int frame = 0;
 
-    object3D humanoid("cube.obj");
+    object3D humanoid(filename);
     humanoid.center_model();
     //While application is running
     while( !quit )
@@ -541,7 +598,7 @@ int main( int argc, char* args[] )
             humanoid.rotate(alpha*3.141/180, beta*3.141/180, gamma*3.141/180);
             humanoid.set_scale(scale);
             humanoid.set_offset(offset_x, offset_y);
-            
+            humanoid.sort_faces();
             humanoid.calculate_persp();
             // printf("calculate_persp");
         }
@@ -555,9 +612,13 @@ int main( int argc, char* args[] )
 
             // Set the color for drawing the lines. White on Black Background
             SDL_SetRenderDrawColor(gRenderer, 255, 255, 255, 255);
-
+            
+            humanoid.fill(gRenderer);
             humanoid.draw(gRenderer);
+            
 
+            // SDL_RenderGeometry( gRenderer, nullptr, verts.data(), verts.size(), nullptr, 0 );
+        
             frame++;
 
             // SDL_RenderDrawLine(gRenderer, SCREEN_WIDTH/2,0,SCREEN_WIDTH/2,SCREEN_HEIGHT);
