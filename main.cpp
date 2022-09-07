@@ -33,17 +33,32 @@ public:
         // y = 0 + v.x*sin(a)*cos(b)+v.y*(sin(a)*sin(b)*sin(c)+cos(a)*cos(c))+v.z*(sin(a)*sin(b)*cos(c)-cos(a)*sin(c));//*cos(angle);
         // z = 0 + v.x*-sin(b)+v.y*(cos(b)*sin(c))+v.z*(cos(b)*cos(c));
 
-        x = v.x * (cos(b)*cos(c)) + v.y*(sin(a)*sin(b)*cos(c) - cos(a)*sin(c))+v.z*(cos(a)*sin(b)*cos(c) + sin(a)*sin(c));
-        y = v.x*(cos(b)*sin(c))+v.y*(sin(a)*sin(b)*sin(c)+cos(a)*cos(c)) + v.z*(cos(a)*sin(b)*sin(c)-sin(a)*cos(c));
-        z = v.x * (-sin(b)) + v.y*(sin(a)*cos(b))+v.z*(cos(a)*cos(b));
+        // x = v.x * (cos(b)*cos(c)) + v.y*(sin(a)*sin(b)*cos(c) - cos(a)*sin(c))+v.z*(cos(a)*sin(b)*cos(c) + sin(a)*sin(c));
+        // y = v.x*(cos(b)*sin(c))+v.y*(sin(a)*sin(b)*sin(c)+cos(a)*cos(c)) + v.z*(cos(a)*sin(b)*sin(c)-sin(a)*cos(c));
+        // z = v.x * (-sin(b)) + v.y*(sin(a)*cos(b))+v.z*(cos(a)*cos(b));
         // printf("rot: %f %f    ",x,z);
     }
 
     vec3 rotate_(float a, float b, float c)
     {
-        return vec3(x * (cos(b)*cos(c)) + y*(sin(a)*sin(b)*cos(c) - cos(a)*sin(c))+z*(cos(a)*sin(b)*cos(c) + sin(a)*sin(c)),
-            x*(cos(b)*sin(c))+y*(sin(a)*sin(b)*sin(c)+cos(a)*cos(c)) + z*(cos(a)*sin(b)*sin(c)-sin(a)*cos(c)),
-            x * (-sin(b)) + y*(sin(a)*cos(b))+z*(cos(a)*cos(b)));
+        // return vec3(x * (cos(b)*cos(c)) + y*(sin(a)*sin(b)*cos(c) - cos(a)*sin(c))+z*(cos(a)*sin(b)*cos(c) + sin(a)*sin(c)),
+        //     x*(cos(b)*sin(c))+y*(sin(a)*sin(b)*sin(c)+cos(a)*cos(c)) + z*(cos(a)*sin(b)*sin(c)-sin(a)*cos(c)),
+        //     x * (-sin(b)) + y*(sin(a)*cos(b))+z*(cos(a)*cos(b)));
+        vec3 rot_x = rotate_1axis(vec3(1,0,0), a);
+        vec3 rot_y = rotate_1axis(vec3(0,1,0), b, rot_x);
+        return rotate_1axis(vec3(0,0,1), c, rot_y);
+    }
+    vec3 rotate_1axis(vec3 v, float t)
+    {
+        return vec3(x*(cos(t) + pow(v.x,2)*(1-cos(t))) + y*(v.x*v.y*(1-cos(t)) - v.z*sin(t)) + z*(v.x*v.z*(1-cos(t)) + v.y*sin(t)),
+            x*(v.x*v.y*(1-cos(t)) + v.z*sin(t)) + y*(cos(t) + pow(v.y,2)*(1-cos(t))) + z*(v.y*v.z*(1-cos(t)) - v.x*sin(t)),
+            x*(v.z*v.x*(1-cos(t)) - v.y*sin(t)) + y*(v.y*v.z*(1-cos(t)) + v.x*sin(t)) + z*(cos(t) + pow(v.z,2)*(1-cos(t))) );
+    }
+    vec3 rotate_1axis(vec3 v, float t, vec3 v2)
+    {
+        return vec3(v2.x*(cos(t) + pow(v.x,2)*(1-cos(t))) + v2.y*(v.x*v.y*(1-cos(t)) - v.z*sin(t)) + v2.z*(v.x*v.z*(1-cos(t)) + v.y*sin(t)),
+            v2.x*(v.x*v.y*(1-cos(t)) + v.z*sin(t)) + v2.y*(cos(t) + pow(v.y,2)*(1-cos(t))) + v2.z*(v.y*v.z*(1-cos(t)) - v.x*sin(t)),
+            v2.x*(v.z*v.x*(1-cos(t)) - v.y*sin(t)) + v2.y*(v.y*v.z*(1-cos(t)) + v.x*sin(t)) + v2.z*(cos(t) + pow(v.z,2)*(1-cos(t))) );
     }
 
 };
@@ -229,6 +244,11 @@ public:
     std::vector<int> faceZ;
     std::vector<SDL_Color> faceColors;
     std::vector<std::vector<SDL_Vertex>> verts_sdl;
+
+    vec3 rot_x, rot_y, rot_z;
+    vec2 rotp_x, rotp_y, rotp_z;
+
+
     int scale = 10;
     int offset_x = 0, offset_y = 0;
     float alpha = 0.0, beta = 0.0, gamma = 0.0;
@@ -244,9 +264,14 @@ public:
 
         for (int i = 0; i< faceColors.size(); i++)
         {
-            faceColors[i] = {rand() % 256, rand() % 256, rand() % 256,255};
-            // faceColors[i] = {95, 200, 128,255};
+            // faceColors[i] = {rand() % 256, rand() % 256, rand() % 256,255};
+            faceColors[i] = {95, 200, 128,255};
         }
+
+        rot_x = vec3(15,0,0);
+        rot_y = vec3(0,15,0);
+        rot_z = vec3(0,0,15);
+
         calculate_persp();
         printf("vectors:%d persp:%d faces:%d verts_sdl:%d scale:%d offset_x:%d offset_y:%d\ncenter_offset_x:%f center_offset_y:%f center_offset_z:%f\nalpha:%f beta:%f gamma:%f \n", vectors.size(), 
         persp.size(), faces.size(),verts_sdl.size(), scale, offset_x, offset_y, center_offset_x, center_offset_y, center_offset_z, alpha, beta, gamma);
@@ -267,9 +292,11 @@ public:
             float sumval = 0;
             for (int j = 0; j<faces[i].size(); j++)
             {
-                sumval += vectors[faces[i][j]].z;
+                vec3 rot_vector = vectors[faces[i][j]].rotate_(this->alpha, this->beta, this->gamma);
+                sumval += pow(rot_vector.z, 2) ;
             }
-            faceZ_means[i] = sumval / faces[i].size();
+            // printf("0")
+            faceZ_means[i] = sumval * 1.0 / faces[i].size();
         }
 
         std::iota(faceZ.begin(), faceZ.end(), 0);
@@ -278,6 +305,11 @@ public:
             [&](int A, int B) -> bool {
                 return faceZ_means[A] > faceZ_means[B];
         });
+
+        // for (int i=0; i<faces.size(); i++)
+        // {
+        //     printf("%d %d %f\n", i, faceZ[i], faceZ_means[i]);
+        // }
     }
 
     void set_offset(int x, int y)
@@ -301,9 +333,20 @@ public:
         for (int i = 0; i<vectors.size(); i++)
         {
             vec3 rot_vector = vectors[i].rotate_(this->alpha, this->beta, this->gamma);
-            persp[i] = vec2(SCREEN_WIDTH*1.0/2 + scale*rot_vector.x+offset_x,SCREEN_HEIGHT*1.0/2+scale*rot_vector.y+offset_y);
+            // vec3 rot_vector = vectors[i].rotate_1axis(vectors[i].rotate_1axis(vectors[i].rotate_1axis(vectors[i], alpha, rot_x), beta, rot_y), gamma , rot_z);
+            // vec3 rot_vector = vectors[i].rotate_1axis(vectors[i], alpha, rot_x);
+            persp[i] = vec2(SCREEN_WIDTH*1.0/2 + scale*rot_vector.x+offset_x,SCREEN_HEIGHT*1.0/2+(scale*rot_vector.y+offset_y));
             // persp[i] = vec2(SCREEN_WIDTH*1.0/2 + scale*vectors[i].x+offset_x,SCREEN_HEIGHT*1.0/2+scale*vectors[i].y+offset_y);
         }
+
+        rot_x = vec3(15,0,0).rotate_(this->alpha, this->beta, this->gamma);
+        rot_y = vec3(0,15,0).rotate_(this->alpha, this->beta, this->gamma);
+        rot_z = vec3(0,0,15).rotate_(this->alpha, this->beta, this->gamma);
+
+        rotp_x = vec2(SCREEN_WIDTH*1.0/2 + scale*rot_x.x+offset_x,SCREEN_HEIGHT/2+scale*rot_x.y+offset_y);
+        rotp_y = vec2(SCREEN_WIDTH*1.0/2 + scale*rot_y.x+offset_x,SCREEN_HEIGHT/2+scale*rot_y.y+offset_y);
+        rotp_z = vec2(SCREEN_WIDTH*1.0/2 + scale*rot_z.x+offset_x,SCREEN_HEIGHT/2+scale*rot_z.y+offset_y);
+
 
         for (int i = 0; i<faces.size(); i++)
         {
@@ -346,14 +389,22 @@ public:
                 // printf("i:%d, j:%d %d %d %d %d\t | %d %d | %d %d %d | vector: %f %f %f | vector to: %f %f %f\n", i, j,persp[faces[i][j]-1].x, persp[faces[i][j]-1].y, persp[faces[i][(j+1)%faces[i].size()]-1].x, persp[faces[i][(j+1)%faces[i].size()]-1].y,
                 //     faces[i][j], faces[i][(j+1)%faces[i].size()], faces[i].size(), faces.size(), vectors.size(), vectors[faces[i][j]-1].x,vectors[faces[i][j]-1].y,vectors[faces[i][j]-1].z,
                 //     vectors[faces[i][(j+1)%faces[i].size()]-1].x,vectors[faces[i][(j+1)%faces[i].size()]-1].y,vectors[faces[i][(j+1)%faces[i].size()]-1].z);
-                SDL_SetRenderDrawColor(gRenderer,faceColors[faceZ[i]].r,faceColors[faceZ[i]].g,faceColors[faceZ[i]].b,255);
+                // SDL_SetRenderDrawColor(gRenderer,faceColors[faceZ[i]].r,faceColors[faceZ[i]].g,faceColors[faceZ[i]].b,255);
                 SDL_RenderDrawLine(gRenderer, persp[faces[faceZ[i]][j]-1].x,persp[faces[faceZ[i]][j]-1].y,persp[faces[faceZ[i]][(j+1)%faces[i].size()]-1].x,persp[faces[faceZ[i]][(j+1)%faces[i].size()]-1].y);
             }   
         }
+        SDL_SetRenderDrawColor(gRenderer, 255, 0,0,255);
+        SDL_RenderDrawLine(gRenderer, min(rotp_x.x, SCREEN_WIDTH),min(rotp_x.y, SCREEN_HEIGHT),offset_x+SCREEN_WIDTH/2,offset_y+SCREEN_HEIGHT/2);
+        SDL_SetRenderDrawColor(gRenderer, 0, 255,0,255);
+        SDL_RenderDrawLine(gRenderer, min(rotp_y.x, SCREEN_WIDTH),min(rotp_y.y, SCREEN_HEIGHT),offset_x+SCREEN_WIDTH/2,offset_y+SCREEN_HEIGHT/2);
+        SDL_SetRenderDrawColor(gRenderer, 0, 0,255,255);
+        SDL_RenderDrawLine(gRenderer, min(rotp_z.x, SCREEN_WIDTH),min(rotp_z.y, SCREEN_HEIGHT),offset_x+SCREEN_WIDTH/2,offset_y+SCREEN_HEIGHT/2);
+        SDL_SetRenderDrawColor(gRenderer, 255, 255,255,255);
+        
     }
 
      void set_scale(int scale_){
-        scale = max(1,scale_);
+        scale = -1*max(1,scale_);
     }
 
     bool loadOBJ(string filename)
@@ -415,6 +466,7 @@ public:
           switch (line[0]){
               case ('v'):
                 {
+                    printf("%s\n", line.c_str());
                     std::array<float, 3> v;
                     lineparse << line;
                     lineparse >> temp >> v[0] >> v[1] >> v[2];
@@ -429,14 +481,14 @@ public:
                         min_z = v[2];
                     }
 
-                    if (v[0] > max_x) max_x = v[0];
+                    if (v[0] >= max_x) max_x = v[0];
                     else if (v[0] < min_x) min_x = v[0];
 
-                    if (v[1] > max_y) max_y = v[1];
+                    if (v[1] >= max_y) max_y = v[1];
                     else if (v[1] < min_y) min_y = v[1];
                     
-                    if (v[2] > max_z) max_z = v[2];
-                    else if (v[2] < max_z) min_z = v[2];
+                    if (v[2] >= max_z) max_z = v[2];
+                    else if (v[2] < min_z) min_z = v[2];
 
                     lineparse.str( std::string() );
                     lineparse.clear();
@@ -457,7 +509,7 @@ public:
                     }
 
                     lineparse >> temp;
-                    printf(" Spaces: %d\n", spaces);
+                    // printf(" Spaces: %d\n", spaces);
                     for (int i = 0; i<=spaces; i++)
                     {
                         lineparse >> faces[f_iter][i];
@@ -471,9 +523,16 @@ public:
         }
         myfile.close();
       }
-        center_offset_x = (max_x+min_x)/2;
-        center_offset_y = (max_y+min_y)/2;
-        center_offset_z = (max_z+min_z)/2;
+        center_offset_x = 0;//(max_x+min_x)/2;
+        center_offset_y = 0;//(max_y+min_y)/2;
+        center_offset_z = 0;//(max_z+min_z)/2;
+        // center_offset_x = (max_x+min_x)/2;
+        // center_offset_y = (max_y+min_y)/2;
+        // center_offset_z = (max_z+min_z)/2;
+
+        printf("max_x: %f min_x: %f\tmax_y: %f min_y:%f\tmax_z: %f min_z: %f\n", max_x, min_x, max_y, min_y, max_z, min_z);
+
+
         return true;
     }
 
@@ -598,7 +657,7 @@ int main( int argc, char* args[] )
             humanoid.rotate(alpha*3.141/180, beta*3.141/180, gamma*3.141/180);
             humanoid.set_scale(scale);
             humanoid.set_offset(offset_x, offset_y);
-            humanoid.sort_faces();
+            // humanoid.sort_faces();
             humanoid.calculate_persp();
             // printf("calculate_persp");
         }
@@ -611,9 +670,11 @@ int main( int argc, char* args[] )
 
 
             // Set the color for drawing the lines. White on Black Background
-            SDL_SetRenderDrawColor(gRenderer, 255, 255, 255, 255);
             
             humanoid.fill(gRenderer);
+            SDL_SetRenderDrawColor(gRenderer, 255, 255, 255, 255);
+            
+            
             humanoid.draw(gRenderer);
             
 
