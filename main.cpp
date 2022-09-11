@@ -48,6 +48,11 @@ public:
         vec3 rot_y = rotate_1axis(vec3(0,1,0), b, rot_x);
         return rotate_1axis(vec3(0,0,1), c, rot_y);
     }
+    vec3 norm()
+    {
+        float mag = pow(pow(x,2) + pow(y,2) + pow(z,2),0.5);
+        return vec3(x/mag, y/mag, z/mag);
+    }
     vec3 rotate_1axis(vec3 v, float t)
     {
         return vec3(x*(cos(t) + pow(v.x,2)*(1-cos(t))) + y*(v.x*v.y*(1-cos(t)) - v.z*sin(t)) + z*(v.x*v.z*(1-cos(t)) + v.y*sin(t)),
@@ -75,166 +80,6 @@ public:
         printf("%d, %d    ", x,y);
     }
 };
-
-class face{
-public:    
-    vec3 a,b,c;
-    vec3 a_r,b_r,c_r;
-    vec2 persp_a, persp_b, persp_c;
-    vec3 rot_x, rot_y, rot_z;
-    vec2 rotp_x, rotp_y, rotp_z;
-    std::vector< SDL_Vertex > verts;
-    int scale = 10;
-    int offset_x = 0;
-    int offset_y = 0;
-
-    face(vec3 lst[],int x, int y, int z) {
-        a = vec3(lst[x-1].x,lst[x-1].y,lst[x-1].z);
-        b = vec3(lst[y-1].x,lst[y-1].y, lst[y-1].z);
-        c = vec3(lst[z-1].x,lst[z-1].y,lst[z-1].z);
-
-        rot_x = vec3(15,0,0);
-        rot_y = vec3(0,15,0);
-        rot_z = vec3(0,0,15);
-
-        // persp_a = vec2(SCREEN_WIDTH*1.0/2 +0  + ((round(a.z) == 0) ? 0 : (scale * a.x/a.z)), SCREEN_HEIGHT/2 +0+ ((a.z == 0) ? 0 : (scale * a.y/a.z)));
-        // persp_b = vec2(SCREEN_WIDTH*1.0/2 +0  + ((round(b.z) == 0) ? 0 : (scale * b.x/b.z)), SCREEN_HEIGHT/2 +0+ ((b.z == 0) ? 0 : (scale * b.y/b.z)));
-        // persp_c = vec2(SCREEN_WIDTH*1.0/2 +0  + ((round(c.z) == 0) ? 0 : (scale * c.x/c.z)), SCREEN_HEIGHT/2 +0+ ((c.z == 0) ? 0 : (scale * c.y/c.z)));
-        persp_a = vec2(SCREEN_WIDTH*1.0/2 + scale*a.x+offset_x,SCREEN_HEIGHT/2+scale*a.y+offset_y);
-        persp_b = vec2(SCREEN_WIDTH*1.0/2 + scale*b.x+offset_x,SCREEN_HEIGHT/2+scale*b.y+offset_y);
-        persp_c = vec2(SCREEN_WIDTH*1.0/2 + scale*c.x+offset_x,SCREEN_HEIGHT/2+scale*c.y+offset_y);
-
-        rotp_x = vec2(SCREEN_WIDTH*1.0/2 + scale*rot_x.x+offset_x,SCREEN_HEIGHT/2+scale*rot_x.y+offset_y);
-        rotp_y = vec2(SCREEN_WIDTH*1.0/2 + scale*rot_y.x+offset_x,SCREEN_HEIGHT/2+scale*rot_y.y+offset_y);
-        rotp_z = vec2(SCREEN_WIDTH*1.0/2 + scale*rot_z.x+offset_x,SCREEN_HEIGHT/2+scale*rot_z.y+offset_y);
-        verts =
-        {
-            { SDL_FPoint{ persp_a.x, persp_a.y }, SDL_Color{ 255, 255, 255, 255 }, SDL_FPoint{ 0 }, },
-            { SDL_FPoint{ persp_b.x, persp_b.y }, SDL_Color{ 255, 255, 255, 255 }, SDL_FPoint{ 0 }, },
-            { SDL_FPoint{ persp_c.x, persp_c.y }, SDL_Color{ 255, 255, 255, 255 }, SDL_FPoint{ 0 }, }//,
-            // { SDL_FPoint{ persp_a.x, persp_a.y }, SDL_Color{ 0, 255, 0, 255 }, SDL_FPoint{ 0 }, }
-        };
-    }
-    
-    void set_offset(int x, int y){
-        offset_x = x;
-        offset_y = y;
-    }
-    void fill(){
-        SDL_RenderGeometry( gRenderer, nullptr, verts.data(), verts.size(), nullptr, 0 );
-    }
-    void draw(){
-        
-        SDL_SetRenderDrawColor(gRenderer, 255, 0,0,255);
-        // SDL_SetRenderDrawColor(gRenderer, 255, 255,255,255);
-        // SDL_RenderDrawPoint(gRenderer, persp_a.x, persp_a.y);
-        // SDL_RenderDrawPoint(gRenderer, persp_a.x, persp_a.y+1);
-        // SDL_RenderDrawPoint(gRenderer, persp_a.x+1, persp_a.y);
-        // SDL_RenderDrawPoint(gRenderer, persp_a.x+1, persp_a.y+1);
-        SDL_RenderDrawLine(gRenderer, min(persp_a.x, SCREEN_WIDTH),min(persp_a.y, SCREEN_HEIGHT),min(persp_b.x, SCREEN_WIDTH),min(persp_b.y, SCREEN_HEIGHT));
-        SDL_SetRenderDrawColor(gRenderer, 0, 255,0,255);
-        // SDL_RenderDrawPoint(gRenderer, persp_b.x, persp_b.y);
-        // SDL_RenderDrawPoint(gRenderer, persp_b.x, persp_b.y+1);
-        // SDL_RenderDrawPoint(gRenderer, persp_b.x+1, persp_b.y);
-        // SDL_RenderDrawPoint(gRenderer, persp_b.x+1, persp_b.y+1);
-        SDL_RenderDrawLine(gRenderer, min(persp_b.x, SCREEN_WIDTH),min(persp_b.y, SCREEN_HEIGHT),min(persp_c.x, SCREEN_WIDTH),min(persp_c.y, SCREEN_HEIGHT));
-        SDL_SetRenderDrawColor(gRenderer, 0, 0,255,255);
-        // SDL_RenderDrawPoint(gRenderer, persp_c.x, persp_c.y);
-        // SDL_RenderDrawPoint(gRenderer, persp_c.x, persp_c.y+1);
-        // SDL_RenderDrawPoint(gRenderer, persp_c.x+1, persp_c.y);
-        // SDL_RenderDrawPoint(gRenderer, persp_c.x+1, persp_c.y+1);
-        SDL_RenderDrawLine(gRenderer, min(persp_c.x, SCREEN_WIDTH),min(persp_c.y, SCREEN_HEIGHT),min(persp_a.x, SCREEN_WIDTH),min(persp_a.y, SCREEN_HEIGHT));
-
-        SDL_SetRenderDrawColor(gRenderer, 255, 0,0,255);
-        SDL_RenderDrawLine(gRenderer, min(rotp_x.x, SCREEN_WIDTH),min(rotp_x.y, SCREEN_HEIGHT),offset_x+SCREEN_WIDTH/2,offset_y+SCREEN_HEIGHT/2);
-        SDL_SetRenderDrawColor(gRenderer, 0, 255,0,255);
-        SDL_RenderDrawLine(gRenderer, min(rotp_y.x, SCREEN_WIDTH),min(rotp_y.y, SCREEN_HEIGHT),offset_x+SCREEN_WIDTH/2,offset_y+SCREEN_HEIGHT/2);
-        SDL_SetRenderDrawColor(gRenderer, 0, 0,255,255);
-        SDL_RenderDrawLine(gRenderer, min(rotp_z.x, SCREEN_WIDTH),min(rotp_z.y, SCREEN_HEIGHT),offset_x+SCREEN_WIDTH/2,offset_y+SCREEN_HEIGHT/2);
-        // SDL_SetRenderDrawColor(gRenderer, 255, 255,255,255);
-
-        
-    }
-    void rotate(float ax, float by, float cz){
-        a_r.rotate(ax,by,cz,a);
-        b_r.rotate(ax,by,cz,b);
-        c_r.rotate(ax,by,cz,c);
-        rot_x.rotate(ax, by,cz, vec3(15,0,0));
-        rot_y.rotate(ax, by,cz, vec3(0,15,0));
-        rot_z.rotate(ax, by,cz, vec3(0,0,15));
-        // printf("rotated: ");
-        // a_r.vecprint();
-        // printf("  ");
-        // b_r.vecprint();
-        // printf("  ");
-        // c_r.vecprint();
-        // printf("  \n");
-        // persp_a = vec2(SCREEN_WIDTH*1.0/2 +0  + ((round(a_r.z) == 0) ? 0 : (scale * a_r.x/a_r.z)), SCREEN_HEIGHT/2 +0+ ((a_r.z == 0) ? 0 : (scale * a_r.y/a_r.z)));
-        // persp_b = vec2(SCREEN_WIDTH*1.0/2 +0  + ((round(b_r.z) == 0) ? 0 : (scale * b_r.x/b_r.z)), SCREEN_HEIGHT/2 +0+ ((b_r.z == 0) ? 0 : (scale * b_r.y/b_r.z)));
-        // persp_c = vec2(SCREEN_WIDTH*1.0/2 +0  + ((round(c_r.z) == 0) ? 0 : (scale * c_r.x/c_r.z)), SCREEN_HEIGHT/2 +0+ ((c_r.z == 0) ? 0 : (scale * c_r.y/c_r.z)));
-
-
-
-
-        rotp_x = vec2(SCREEN_WIDTH*1.0/2 + scale*rot_x.x+offset_x,SCREEN_HEIGHT/2+scale*rot_x.y+offset_y);
-        rotp_y = vec2(SCREEN_WIDTH*1.0/2 + scale*rot_y.x+offset_x,SCREEN_HEIGHT/2+scale*rot_y.y+offset_y);
-        rotp_z = vec2(SCREEN_WIDTH*1.0/2 + scale*rot_z.x+offset_x,SCREEN_HEIGHT/2+scale*rot_z.y+offset_y);
-
-        persp_a = vec2(SCREEN_WIDTH*1.0/2 + scale*a_r.x+offset_x,SCREEN_HEIGHT/2+scale*a_r.y+offset_y);
-        persp_b = vec2(SCREEN_WIDTH*1.0/2 + scale*b_r.x+offset_x,SCREEN_HEIGHT/2+scale*b_r.y+offset_y);
-        persp_c = vec2(SCREEN_WIDTH*1.0/2 + scale*c_r.x+offset_x,SCREEN_HEIGHT/2+scale*c_r.y+offset_y);
-        verts =
-        {
-            { SDL_FPoint{ persp_a.x, persp_a.y }, SDL_Color{ 255, 255, 255, 255 }, SDL_FPoint{ 0 }, },
-            { SDL_FPoint{ persp_b.x, persp_b.y }, SDL_Color{ 255, 255, 255, 255 }, SDL_FPoint{ 0 }, },
-            { SDL_FPoint{ persp_c.x, persp_c.y }, SDL_Color{ 255, 255, 255, 255 }, SDL_FPoint{ 0 }, }//,
-            // { SDL_FPoint{ persp_a.x, persp_a.y }, SDL_Color{ 255, 0, 0, 255 }, SDL_FPoint{ 0 }, }
-            
-        };
-    }
-    
-    void set_scale(int scale_){
-        scale = max(1,scale_);
-    }
-
-    void calc_persp(int scale_){
-        // persp_a = vec2(SCREEN_WIDTH*1.0/2 +0  + ((round(a.z) == 0) ? 0 : (scale * a.x/a.z)), SCREEN_HEIGHT/2 +0+ ((a.z == 0) ? 0 : (scale * a.y/a.z)));
-        // persp_b = vec2(SCREEN_WIDTH*1.0/2 +0  + ((round(b.z) == 0) ? 0 : (scale * b.x/b.z)), SCREEN_HEIGHT/2 +0+ ((b.z == 0) ? 0 : (scale * b.y/b.z)));
-        // persp_c = vec2(SCREEN_WIDTH*1.0/2 +0  + ((round(c.z) == 0) ? 0 : (scale * c.x/c.z)), SCREEN_HEIGHT/2 +0+ ((c.z == 0) ? 0 : (scale * c.y/c.z)));
-
-        scale = scale_;
-        persp_a = vec2(SCREEN_WIDTH*1.0/2 + scale*a.x,SCREEN_HEIGHT/2+scale_*a.y);
-        persp_b = vec2(SCREEN_WIDTH*1.0/2 + scale*b.x,SCREEN_HEIGHT/2+scale_*b.y);
-        persp_c = vec2(SCREEN_WIDTH*1.0/2 + scale*c.x,SCREEN_HEIGHT/2+scale_*c.y);
-        verts =
-        {
-            { SDL_FPoint{ persp_a.x, persp_a.y }, SDL_Color{ 255, 0, 0, 255 }, SDL_FPoint{ 0 }, },
-            { SDL_FPoint{ persp_b.x, persp_b.y }, SDL_Color{ 0, 0, 255, 255 }, SDL_FPoint{ 0 }, },
-            { SDL_FPoint{ persp_c.x, persp_c.y }, SDL_Color{ 0, 255, 0, 255 }, SDL_FPoint{ 0 }, },
-        };
-    }
-
-    void printFace(){
-        persp_a.vec2print();
-        printf("    ");
-        persp_b.vec2print();
-        printf("    ");
-        persp_c.vec2print();
-        printf("        ");
-        a.vecprint();
-        printf("    ");
-        b.vecprint();
-        printf("    ");
-        c.vecprint();
-        printf("    \n");
-    }
-
-};
-
-// class obj3d{
-// public:
-
-// };
 
 class object3D{
 public:
@@ -332,9 +177,9 @@ public:
     {
         for (int i = 0; i<vectors.size(); i++)
         {
-            vec3 rot_vector = vectors[i].rotate_(this->alpha, this->beta, this->gamma);
-            // vec3 rot_vector = vectors[i].rotate_1axis(vectors[i].rotate_1axis(vectors[i].rotate_1axis(vectors[i], alpha, rot_x), beta, rot_y), gamma , rot_z);
-            // vec3 rot_vector = vectors[i].rotate_1axis(vectors[i], alpha, rot_x);
+            // vec3 rot_vector = vectors[i].rotate_(this->alpha, this->beta, this->gamma);
+            // vec3 rot_vector = vectors[i].rotate_1axis(rot_z.norm(), gamma, vectors[i].rotate_1axis(rot_y.norm(), beta, vectors[i].rotate_1axis(rot_x.norm(),alpha)));
+            vec3 rot_vector  = vectors[i];//.rotate_1axis(rot_x.norm(),alpha);
             persp[i] = vec2(SCREEN_WIDTH*1.0/2 + scale*rot_vector.x+offset_x,SCREEN_HEIGHT*1.0/2+(scale*rot_vector.y+offset_y));
             // persp[i] = vec2(SCREEN_WIDTH*1.0/2 + scale*vectors[i].x+offset_x,SCREEN_HEIGHT*1.0/2+scale*vectors[i].y+offset_y);
         }
@@ -466,7 +311,7 @@ public:
           switch (line[0]){
               case ('v'):
                 {
-                    printf("%s\n", line.c_str());
+                    // printf("%s\n", line.c_str());
                     std::array<float, 3> v;
                     lineparse << line;
                     lineparse >> temp >> v[0] >> v[1] >> v[2];
