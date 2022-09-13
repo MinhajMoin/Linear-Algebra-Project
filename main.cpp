@@ -65,6 +65,13 @@ public:
             v2.x*(v.x*v.y*(1-cos(t)) + v.z*sin(t)) + v2.y*(cos(t) + pow(v.y,2)*(1-cos(t))) + v2.z*(v.y*v.z*(1-cos(t)) - v.x*sin(t)),
             v2.x*(v.z*v.x*(1-cos(t)) - v.y*sin(t)) + v2.y*(v.y*v.z*(1-cos(t)) + v.x*sin(t)) + v2.z*(cos(t) + pow(v.z,2)*(1-cos(t))) );
     }
+    vec3 rotate_alt(float a, float b, float c)
+    {
+        vec3 v1 = vec3(x, y*cos(a)-z*sin(a), y*sin(a)+z*cos(a));
+        // vec3 v2 = vec3(v1.x*cos(b)+v1.z*sin(b), v1.y, -v1.x*sin(b)+v1.z*cos(b));
+        // return vec3(v2.x*cos(c)-v2.y*sin(c), v2.x*sin(c)+v2.y*cos(c), v2.z);
+        return vec3(v1.x*cos(c)-v1.y*sin(c), v1.x*sin(c)+v1.y*cos(c), z);
+    }
 
 };
 
@@ -89,6 +96,7 @@ public:
     std::vector<int> faceZ;
     std::vector<SDL_Color> faceColors;
     std::vector<std::vector<SDL_Vertex>> verts_sdl;
+    float persp_angle = 0 * 180/3.141;
 
     vec3 rot_x, rot_y, rot_z;
     vec2 rotp_x, rotp_y, rotp_z;
@@ -177,10 +185,10 @@ public:
     {
         for (int i = 0; i<vectors.size(); i++)
         {
-            // vec3 rot_vector = vectors[i].rotate_(this->alpha, this->beta, this->gamma);
-            // vec3 rot_vector = vectors[i].rotate_1axis(rot_z.norm(), gamma, vectors[i].rotate_1axis(rot_y.norm(), beta, vectors[i].rotate_1axis(rot_x.norm(),alpha)));
-            vec3 rot_vector  = vectors[i];//.rotate_1axis(rot_x.norm(),alpha);
-            persp[i] = vec2(SCREEN_WIDTH*1.0/2 + scale*rot_vector.x+offset_x,SCREEN_HEIGHT*1.0/2+(scale*rot_vector.y+offset_y));
+            vec3 rot_vector = vectors[i].rotate_alt(this->alpha, this->beta, this->gamma);
+            // vec3 rot_vector = vectors[i].rotate_1axis(rot_y.norm(), beta, vectors[i].rotate_1axis(rot_z.norm(), gamma, vectors[i].rotate_1axis(rot_x.norm(),alpha)));
+            // vec3 rot_vector  = vectors[i];//.rotate_1axis(rot_x.norm(),alpha);
+            persp[i] = vec2(SCREEN_WIDTH*1.0/2 + scale*rot_vector.x+offset_x + rot_vector.z * 2 * cos(persp_angle),SCREEN_HEIGHT*1.0/2+(scale*rot_vector.y+offset_y+rot_vector.z * 2 * sin(persp_angle)));
             // persp[i] = vec2(SCREEN_WIDTH*1.0/2 + scale*vectors[i].x+offset_x,SCREEN_HEIGHT*1.0/2+scale*vectors[i].y+offset_y);
         }
 
@@ -188,9 +196,9 @@ public:
         rot_y = vec3(0,15,0).rotate_(this->alpha, this->beta, this->gamma);
         rot_z = vec3(0,0,15).rotate_(this->alpha, this->beta, this->gamma);
 
-        rotp_x = vec2(SCREEN_WIDTH*1.0/2 + scale*rot_x.x+offset_x,SCREEN_HEIGHT/2+scale*rot_x.y+offset_y);
-        rotp_y = vec2(SCREEN_WIDTH*1.0/2 + scale*rot_y.x+offset_x,SCREEN_HEIGHT/2+scale*rot_y.y+offset_y);
-        rotp_z = vec2(SCREEN_WIDTH*1.0/2 + scale*rot_z.x+offset_x,SCREEN_HEIGHT/2+scale*rot_z.y+offset_y);
+        rotp_x = vec2(SCREEN_WIDTH*1.0/2 + scale*rot_x.x+offset_x + rot_x.z * 2 * cos(persp_angle),SCREEN_HEIGHT/2+scale*rot_x.y+offset_y+rot_x.z * 2 * sin(persp_angle));
+        rotp_y = vec2(SCREEN_WIDTH*1.0/2 + scale*rot_y.x+offset_x + rot_y.z * 2 * cos(persp_angle),SCREEN_HEIGHT/2+scale*rot_y.y+offset_y+rot_y.z * 2 * sin(persp_angle));
+        rotp_z = vec2(SCREEN_WIDTH*1.0/2 + scale*rot_z.x+offset_x + rot_z.z * 2 * cos(persp_angle),SCREEN_HEIGHT/2+scale*rot_z.y+offset_y+rot_z.z * 2 * sin(persp_angle));
 
 
         for (int i = 0; i<faces.size(); i++)
@@ -368,12 +376,12 @@ public:
         }
         myfile.close();
       }
-        center_offset_x = 0;//(max_x+min_x)/2;
-        center_offset_y = 0;//(max_y+min_y)/2;
-        center_offset_z = 0;//(max_z+min_z)/2;
-        // center_offset_x = (max_x+min_x)/2;
-        // center_offset_y = (max_y+min_y)/2;
-        // center_offset_z = (max_z+min_z)/2;
+        // center_offset_x = 0;//(max_x+min_x)/2;
+        // center_offset_y = 0;//(max_y+min_y)/2;
+        // center_offset_z = 0;//(max_z+min_z)/2;
+        center_offset_x = (max_x+min_x)/2;
+        center_offset_y = (max_y+min_y)/2;
+        center_offset_z = (max_z+min_z)/2;
 
         printf("max_x: %f min_x: %f\tmax_y: %f min_y:%f\tmax_z: %f min_z: %f\n", max_x, min_x, max_y, min_y, max_z, min_z);
 
@@ -499,9 +507,10 @@ int main( int argc, char* args[] )
                 }
                 break;
             }
+
+            humanoid.set_offset(offset_x, offset_y);
             humanoid.rotate(alpha*3.141/180, beta*3.141/180, gamma*3.141/180);
             humanoid.set_scale(scale);
-            humanoid.set_offset(offset_x, offset_y);
             // humanoid.sort_faces();
             humanoid.calculate_persp();
             // printf("calculate_persp");
@@ -527,8 +536,8 @@ int main( int argc, char* args[] )
         
             frame++;
 
-            // SDL_RenderDrawLine(gRenderer, SCREEN_WIDTH/2,0,SCREEN_WIDTH/2,SCREEN_HEIGHT);
-            // SDL_RenderDrawLine(gRenderer, 0,SCREEN_HEIGHT/2,SCREEN_WIDTH,SCREEN_HEIGHT/2);
+            SDL_RenderDrawLine(gRenderer, SCREEN_WIDTH/2,0,SCREEN_WIDTH/2,SCREEN_HEIGHT);
+            SDL_RenderDrawLine(gRenderer, 0,SCREEN_HEIGHT/2,SCREEN_WIDTH,SCREEN_HEIGHT/2);
             SDL_RenderPresent(gRenderer);
             // if (frame == 10) break;
             // if (frame % 60 == 0) {
