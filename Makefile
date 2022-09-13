@@ -25,6 +25,7 @@ VER = c++20
 #OBJ_NAME specifies the name of our exectuable
 OBJ_NAME = LinearAlgebra.exe
 
+
 #This is the target that compiles our executable
 all : $(OBJS)
-	$(CC) $(OBJS) $(INCLUDE_PATHS) $(LIBRARY_PATHS) $(COMPILER_FLAGS) $(LINKER_FLAGS) -o $(OBJ_NAME) --std=$(VER)
+	$(CC) $(OBJS) $(INCLUDE_PATHS) $(LIBRARY_PATHS) $(COMPILER_FLAGS) $(LINKER_FLAGS) -o $(OBJ_NAME) -static-libstdc++ --std=$(VER)

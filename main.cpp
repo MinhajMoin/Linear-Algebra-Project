@@ -188,7 +188,8 @@ public:
             vec3 rot_vector = vectors[i].rotate_alt(this->alpha, this->beta, this->gamma);
             // vec3 rot_vector = vectors[i].rotate_1axis(rot_y.norm(), beta, vectors[i].rotate_1axis(rot_z.norm(), gamma, vectors[i].rotate_1axis(rot_x.norm(),alpha)));
             // vec3 rot_vector  = vectors[i];//.rotate_1axis(rot_x.norm(),alpha);
-            persp[i] = vec2(SCREEN_WIDTH*1.0/2 + scale*rot_vector.x+offset_x + rot_vector.z * 2 * cos(persp_angle),SCREEN_HEIGHT*1.0/2+(scale*rot_vector.y+offset_y+rot_vector.z * 2 * sin(persp_angle)));
+            // persp[i] = vec2(SCREEN_WIDTH*1.0/2 + scale*rot_vector.x+offset_x + rot_vector.z * 2 * cos(persp_angle),SCREEN_HEIGHT*1.0/2+(scale*rot_vector.y+offset_y+rot_vector.z * 2 * sin(persp_angle)));
+            persp[i] = vec2(SCREEN_WIDTH*1.0/2 + scale*rot_vector.x+offset_x,SCREEN_HEIGHT*1.0/2+scale*rot_vector.y+offset_y);
             // persp[i] = vec2(SCREEN_WIDTH*1.0/2 + scale*vectors[i].x+offset_x,SCREEN_HEIGHT*1.0/2+scale*vectors[i].y+offset_y);
         }
 
@@ -196,9 +197,12 @@ public:
         rot_y = vec3(0,15,0).rotate_(this->alpha, this->beta, this->gamma);
         rot_z = vec3(0,0,15).rotate_(this->alpha, this->beta, this->gamma);
 
-        rotp_x = vec2(SCREEN_WIDTH*1.0/2 + scale*rot_x.x+offset_x + rot_x.z * 2 * cos(persp_angle),SCREEN_HEIGHT/2+scale*rot_x.y+offset_y+rot_x.z * 2 * sin(persp_angle));
-        rotp_y = vec2(SCREEN_WIDTH*1.0/2 + scale*rot_y.x+offset_x + rot_y.z * 2 * cos(persp_angle),SCREEN_HEIGHT/2+scale*rot_y.y+offset_y+rot_y.z * 2 * sin(persp_angle));
-        rotp_z = vec2(SCREEN_WIDTH*1.0/2 + scale*rot_z.x+offset_x + rot_z.z * 2 * cos(persp_angle),SCREEN_HEIGHT/2+scale*rot_z.y+offset_y+rot_z.z * 2 * sin(persp_angle));
+        // rotp_x = vec2(SCREEN_WIDTH*1.0/2 + scale*rot_x.x+offset_x + rot_x.z * 2 * cos(persp_angle),SCREEN_HEIGHT/2+scale*rot_x.y+offset_y+rot_x.z * 2 * sin(persp_angle));
+        // rotp_y = vec2(SCREEN_WIDTH*1.0/2 + scale*rot_y.x+offset_x + rot_y.z * 2 * cos(persp_angle),SCREEN_HEIGHT/2+scale*rot_y.y+offset_y+rot_y.z * 2 * sin(persp_angle));
+        // rotp_z = vec2(SCREEN_WIDTH*1.0/2 + scale*rot_z.x+offset_x + rot_z.z * 2 * cos(persp_angle),SCREEN_HEIGHT/2+scale*rot_z.y+offset_y+rot_z.z * 2 * sin(persp_angle));
+        rotp_x = vec2(SCREEN_WIDTH*1.0/2 + scale*rot_x.x+offset_x ,SCREEN_HEIGHT/2+scale*rot_x.y+offset_y);
+        rotp_y = vec2(SCREEN_WIDTH*1.0/2 + scale*rot_y.x+offset_x ,SCREEN_HEIGHT/2+scale*rot_y.y+offset_y);
+        rotp_z = vec2(SCREEN_WIDTH*1.0/2 + scale*rot_z.x+offset_x ,SCREEN_HEIGHT/2+scale*rot_z.y+offset_y);
 
 
         for (int i = 0; i<faces.size(); i++)
@@ -501,6 +505,8 @@ int main( int argc, char* args[] )
                         scale = 10;
                         offset_x = 0;
                         offset_y = 0;
+                        old_offx = 0;
+                        old_offy = 0;
                         break;
                     default:
                         break;
